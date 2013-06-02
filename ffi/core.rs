@@ -890,9 +890,9 @@ pub mod metadata {
         #[fast_ffi]
         pub fn LLVMMDNodeInContext(C: ContextRef, Vals: *ValueRef, Count: c_uint) -> ValueRef;
         #[fast_ffi]
-        pub fn LLVMMDNode(Vals: ValueRef, Count: c_uint) -> ValueRef;
+        pub fn LLVMMDNode(Vals: *ValueRef, Count: c_uint) -> ValueRef;
         #[fast_ffi]
-        pub fn LLVMGetMDString(V: ValueRef, Len: c_uint) -> *c_char;
+        pub fn LLVMGetMDString(V: ValueRef, Len: *mut c_uint) -> *c_char;
         #[fast_ffi]
         pub fn LLVMGetMDNodeNumOperands(V: ValueRef) -> c_uint;
         #[fast_ffi]

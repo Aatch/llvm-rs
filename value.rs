@@ -1,5 +1,5 @@
 use super::*;
-use ffi::core::{value,constant,global,function};
+use ffi::core::{value,constant,global,function,metadata};
 use ffi::core::{ValueRef,True,False,Linkage,Visibility,ThreadLocalMode,Attribute};
 
 use std::str;
@@ -9,6 +9,7 @@ use std::cast;
 pub trait Val<T:ty::Ty> : Wrapper<ValueRef> { }
 pub trait ConstVal<T:ty::Ty> : Val<T> { }
 pub trait GlobalVal<T:ty::Ty> : ConstVal<T> { }
+pub trait InstrVal<T:ty::Ty> : Val<T> { }
 
 pub trait ValImpl<T:ty::Ty> {
     pub fn type_of(&self) -> T;
@@ -107,6 +108,11 @@ pub trait ParamVal<T:ty::Ty> : Val<T> {
     pub fn remove_attr(&mut self, attr: Attribute);
     pub fn get_attribute(&self) -> u64;
     pub fn set_alignment(&mut self, align: uint);
+}
+
+pub trait MDVal : Val<ty::Metadata> {
+    pub fn operands(&self) -> ~[Value<ty::Type>];
+    pub fn get_string(&self) -> ~str;
 }
 
 impl<T:ty::Ty,U:Val<T>> ValImpl<T> for U {
@@ -620,3 +626,69 @@ impl<T:ty::Ty> ParamVal<T> for Param<T> {
     }
 }
 
+pub struct Metadata {
+    priv r: ValueRef
+}
+
+impl Wrapper<ValueRef> for Metadata {
+    pub fn from_ref(R: ValueRef) -> Metadata {
+        Metadata {
+            r: R
+        }
+    }
+
+    pub fn to_ref(&self) -> ValueRef {
+        self.r
+    }
+}
+
+impl Val<ty::Metadata> for Metadata { }
+
+impl MDVal for Metadata {
+    pub fn operands(&self) -> ~[Value<ty::Type>] {
+        unsafe {
+            let num_ops = metadata::LLVMGetMDNodeNumOperands(self.r) as uint;
+            let mut buf : ~[ValueRef] = vec::with_capacity(num_ops);
+            metadata::LLVMGetMDNodeOperands(self.r, vec::raw::to_mut_ptr(buf));
+            do buf.map |&VR| {
+                let t : Value<ty::Type> = Wrapper::from_ref(VR);
+                t
+            }
+        }
+    }
+
+    pub fn get_string(&self) -> ~str {
+        unsafe {
+            let mut len = 0 as std::libc::c_uint;
+            let s = metadata::LLVMGetMDString(self.r, &mut len);
+            str::raw::from_buf_len(s as *u8, len as uint)
+        }
+    }
+}
+
+impl Metadata {
+    pub fn new_string(c: Context, data: &str) -> Metadata {
+        unsafe {
+            let cr = c.to_ref();
+            let r = do str::as_buf(data) |s, len| {
+                metadata::LLVMMDStringInContext(cr,
+                                               s as *std::libc::c_char,
+                                               len as std::libc::c_uint)
+            };
+
+            Wrapper::from_ref(r)
+        }
+    }
+
+    pub fn new_node(c: Context, vals: ~[Value<ty::Type>]) -> Metadata {
+        unsafe {
+            let cr = c.to_ref();
+            let llvs = do vals.map |v| { v.to_ref() };
+            let r = do vec::as_imm_buf(llvs) |buf, len| {
+                metadata::LLVMMDNodeInContext(cr, buf, len as std::libc::c_uint)
+            };
+
+            Wrapper::from_ref(r)
+        }
+    }
+}
