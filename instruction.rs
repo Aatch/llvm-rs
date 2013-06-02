@@ -58,3 +58,41 @@ impl<T:ty::Ty> Wrapper<ValueRef> for Instruction<T> {
         self.r
     }
 }
+
+impl<T:ty::Ty> InstrVal<T> for Instruction<T> { }
+
+pub struct SwitchInstr {
+    priv r: ffi::core::ValueRef
+}
+
+impl InstrVal<ty::Void> for SwitchInstr { }
+
+impl Wrapper<ValueRef> for SwitchInstr {
+    pub fn from_ref(R: ValueRef) -> SwitchInstr {
+        SwitchInstr {
+            r: R
+        }
+    }
+
+    pub fn to_ref(&self) -> ValueRef {
+        self.r
+    }
+}
+
+pub struct LandingPad {
+    priv r: ffi::core::ValueRef
+}
+
+impl InstrVal<ty::Void> for LandingPad { }
+
+impl Wrapper<ValueRef> for LandingPad {
+    pub fn from_ref(R: ValueRef) -> LandingPad {
+        LandingPad {
+            r: R
+        }
+    }
+
+    pub fn to_ref(&self) -> ValueRef {
+        self.r
+    }
+}
