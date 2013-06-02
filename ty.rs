@@ -514,3 +514,12 @@ impl<T:Ty> Pointer<T> {
         }
     }
 }
+
+impl Ty for Metadata {
+    pub fn kind() -> Kind { Metadata }
+    pub fn is_sized(&self) -> bool {
+        unsafe {
+            core::types::LLVMTypeIsSized(self.r) == core::True
+        }
+    }
+}

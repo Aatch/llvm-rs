@@ -17,6 +17,7 @@ pub mod ffi {
 
 pub mod ty;
 pub mod value;
+pub mod instruction;
 
 pub struct Context {
     priv r: ContextRef,

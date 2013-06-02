@@ -1,5 +1,5 @@
 use super::*;
-use ffi::core::{value,constant,global,function,metadata};
+use ffi::core::{value,constant,global,function,metadata,bb};
 use ffi::core::{ValueRef,True,False,Linkage,Visibility,ThreadLocalMode,Attribute};
 
 use std::str;
@@ -9,7 +9,6 @@ use std::cast;
 pub trait Val<T:ty::Ty> : Wrapper<ValueRef> { }
 pub trait ConstVal<T:ty::Ty> : Val<T> { }
 pub trait GlobalVal<T:ty::Ty> : ConstVal<T> { }
-pub trait InstrVal<T:ty::Ty> : Val<T> { }
 
 pub trait ValImpl<T:ty::Ty> {
     pub fn type_of(&self) -> T;
@@ -113,6 +112,17 @@ pub trait ParamVal<T:ty::Ty> : Val<T> {
 pub trait MDVal : Val<ty::Metadata> {
     pub fn operands(&self) -> ~[Value<ty::Type>];
     pub fn get_string(&self) -> ~str;
+}
+
+pub trait BBVal : Val<ty::Label> {
+    pub fn parent(&self) -> Function;
+    pub fn terminator(&self) -> instruction::Instruction<ty::Type>;
+
+    pub fn insert(&self, c: Context, name: &str) -> BasicBlock;
+    pub fn delete(&self);
+
+    pub fn move_before(&self, before: BasicBlock);
+    pub fn move_after(&self, after: BasicBlock);
 }
 
 impl<T:ty::Ty,U:Val<T>> ValImpl<T> for U {
@@ -626,25 +636,9 @@ impl<T:ty::Ty> ParamVal<T> for Param<T> {
     }
 }
 
-pub struct Metadata {
-    priv r: ValueRef
-}
+pub type Metadata = Value<ty::Metadata>;
 
-impl Wrapper<ValueRef> for Metadata {
-    pub fn from_ref(R: ValueRef) -> Metadata {
-        Metadata {
-            r: R
-        }
-    }
-
-    pub fn to_ref(&self) -> ValueRef {
-        self.r
-    }
-}
-
-impl Val<ty::Metadata> for Metadata { }
-
-impl MDVal for Metadata {
+impl MDVal for Value<ty::Metadata> {
     pub fn operands(&self) -> ~[Value<ty::Type>] {
         unsafe {
             let num_ops = metadata::LLVMGetMDNodeNumOperands(self.r) as uint;
@@ -666,7 +660,7 @@ impl MDVal for Metadata {
     }
 }
 
-impl Metadata {
+impl Value<ty::Metadata> {
     pub fn new_string(c: Context, data: &str) -> Metadata {
         unsafe {
             let cr = c.to_ref();
@@ -691,4 +685,58 @@ impl Metadata {
             Wrapper::from_ref(r)
         }
     }
+}
+
+pub type BasicBlock = Value<ty::Label>;
+
+impl BBVal for BasicBlock {
+    pub fn parent(&self) -> Function {
+        unsafe {
+            let r = bb::LLVMGetBasicBlockParent(bb::LLVMValueAsBasicBlock(self.r));
+            Wrapper::from_ref(r)
+        }
+    }
+
+    pub fn terminator(&self) -> instruction::Instruction<ty::Type> {
+        unsafe {
+            let r = bb::LLVMGetBasicBlockTerminator(bb::LLVMValueAsBasicBlock(self.r));
+            Wrapper::from_ref(r)
+        }
+    }
+
+
+    pub fn insert(&self, c: Context, name: &str) -> BasicBlock {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = bb::LLVMInsertBasicBlockInContext(c.to_ref(),
+                                                          bb::LLVMValueAsBasicBlock(self.r),
+                                                          s);
+                Wrapper::from_ref(bb::LLVMBasicBlockAsValue(r))
+            }
+        }
+    }
+
+    pub fn delete(&self) {
+        unsafe {
+            bb::LLVMDeleteBasicBlock(bb::LLVMValueAsBasicBlock(self.r));
+        }
+    }
+
+
+    pub fn move_before(&self, before: BasicBlock) {
+        unsafe {
+            bb::LLVMMoveBasicBlockBefore(
+                bb::LLVMValueAsBasicBlock(self.r),
+                bb::LLVMValueAsBasicBlock(before.r));
+        }
+    }
+
+    pub fn move_after(&self, after: BasicBlock) {
+        unsafe {
+            bb::LLVMMoveBasicBlockAfter(
+                bb::LLVMValueAsBasicBlock(self.r),
+                bb::LLVMValueAsBasicBlock(after.r));
+        }
+    }
+
 }

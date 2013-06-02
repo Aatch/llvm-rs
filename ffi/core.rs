@@ -976,6 +976,7 @@ pub mod instruction {
         pub fn LLVMGetPreviousInstruction(Inst: ValueRef) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMInstructionEraseFromParent(Inst: ValueRef);
+        #[fast_ffi]
         pub fn LLVMGetICmpPredicate(Inst: ValueRef) -> c_uint;
         #[fast_ffi]
         pub fn LLVMGetSwitchDefaultDest(SwitchInstr: ValueRef) -> BasicBlockRef;
@@ -986,9 +987,9 @@ pub mod instruction {
         #[fast_ffi]
         pub fn LLVMGetInstructionCallConv(Instr: ValueRef) -> c_uint;
         #[fast_ffi]
-        pub fn LLVMAddInstrAttribute(Instr: ValueRef, index: c_uint, Attr: c_uint);
+        pub fn LLVMAddInstrAttribute(Instr: ValueRef, index: c_uint, Attr: c_ulonglong);
         #[fast_ffi]
-        pub fn LLVMRemoveInstrAttribute(Instr: ValueRef, index: c_uint, Attr: c_uint);
+        pub fn LLVMRemoveInstrAttribute(Instr: ValueRef, index: c_uint, Attr: c_ulonglong);
         #[fast_ffi]
         pub fn LLVMSetInstrParamAlignment(Instr: ValueRef, index: c_uint, align: c_uint);
         #[fast_ffi]
@@ -1000,7 +1001,7 @@ pub mod instruction {
         #[fast_ffi]
         pub fn LLVMAddIncoming(PhiNode: ValueRef,
                                IncomingValues: *ValueRef,
-                               IncomingBlocks: BasicBlockRef,
+                               IncomingBlocks: *BasicBlockRef,
                                Count: c_uint);
         #[fast_ffi]
         pub fn LLVMCountIncoming(PhiNode: ValueRef) -> c_uint;
