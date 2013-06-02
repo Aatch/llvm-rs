@@ -59,6 +59,7 @@ impl<T:ty::Ty> Wrapper<ValueRef> for Instruction<T> {
     }
 }
 
+impl<T:ty::Ty> Val<T> for Instruction<T> { }
 impl<T:ty::Ty> InstrVal<T> for Instruction<T> { }
 
 pub struct SwitchInstr {

@@ -26,7 +26,7 @@ impl Wrapper<BuilderRef> for IRBuilder {
 }
 
 impl IRBuilder {
-    pub fn new(c: Context) -> IRBuilder {
+    pub fn new(c: &Context) -> IRBuilder {
         unsafe {
             let r = LLVMCreateBuilderInContext(c.to_ref());
             Wrapper::from_ref(r)
@@ -211,6 +211,253 @@ impl IRBuilder {
         unsafe {
             let r = LLVMBuildResume(self.r, exn.to_ref());
             Wrapper::from_ref(r)
+        }
+    }
+
+    pub fn unreachable(&self) -> Instruction<ty::Void> {
+        unsafe {
+            let r = LLVMBuildUnreachable(self.r);
+            Wrapper::from_ref(r)
+        }
+    }
+
+    pub fn add<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildAdd(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn nsw_add<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildNSWAdd(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn nuw_add<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildNUWAdd(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn fadd<V1:Val<ty::Real>,V2:Val<ty::Real>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildFAdd(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn sub<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildSub(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn nsw_sub<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildNSWSub(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn nuw_sub<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildNUWSub(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn fsub<V1:Val<ty::Real>,V2:Val<ty::Real>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildFSub(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn mul<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildMul(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn nsw_mul<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildNSWMul(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn nuw_mul<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildNUWMul(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn fmul<V1:Val<ty::Real>,V2:Val<ty::Real>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildFMul(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn udiv<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildUDiv(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn sdiv<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildSDiv(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn sdiv_exact<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildExactSDiv(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn fdiv<V1:Val<ty::Real>,V2:Val<ty::Real>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildFDiv(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn urem<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildURem(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn srem<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildURem(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn frem<V1:Val<ty::Real>,V2:Val<ty::Real>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildFRem(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn shl<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildShl(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn lshr<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildLShr(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn ashr<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildAShr(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn or<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildOr(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn xor<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildXor(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
         }
     }
 }

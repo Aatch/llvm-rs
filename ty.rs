@@ -167,7 +167,7 @@ impl Ty for Void {
 }
 
 impl Void {
-    pub fn new(c: Context) -> Void {
+    pub fn new(c: &Context) -> Void {
         unsafe {
             let r = core::types::LLVMVoidTypeInContext(c.to_ref());
             Wrapper::from_ref(r)
@@ -185,7 +185,7 @@ impl Ty for Label {
 }
 
 impl Label {
-    pub fn new(c: Context) -> Label {
+    pub fn new(c: &Context) -> Label {
         unsafe {
             let r = core::types::LLVMLabelTypeInContext(c.to_ref());
             Wrapper::from_ref(r)
@@ -203,37 +203,37 @@ impl Ty for Real {
 }
 
 impl Real {
-    pub fn new_half(c: Context) -> Real {
+    pub fn new_half(c: &Context) -> Real {
         unsafe {
             let r = core::types::LLVMHalfTypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_float(c: Context) -> Real {
+    pub fn new_float(c: &Context) -> Real {
         unsafe {
             let r = core::types::LLVMFloatTypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_double(c: Context) -> Real {
+    pub fn new_double(c: &Context) -> Real {
         unsafe {
             let r = core::types::LLVMDoubleTypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_x86fp80(c: Context) -> Real {
+    pub fn new_x86fp80(c: &Context) -> Real {
         unsafe {
             let r = core::types::LLVMX86FP80TypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_fp128(c: Context) -> Real {
+    pub fn new_fp128(c: &Context) -> Real {
         unsafe {
             let r = core::types::LLVMFP128TypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_ppcfp128(c: Context) -> Real {
+    pub fn new_ppcfp128(c: &Context) -> Real {
         unsafe {
             let r = core::types::LLVMPPCFP128TypeInContext(c.to_ref());
             Wrapper::from_ref(r)
@@ -251,37 +251,37 @@ impl Ty for Integer {
 }
 
 impl Integer {
-    pub fn new_i1(c:Context) -> Integer {
+    pub fn new_i1(c:&Context) -> Integer {
         unsafe {
             let r = core::types::LLVMInt1TypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_i8(c:Context) -> Integer {
+    pub fn new_i8(c:&Context) -> Integer {
         unsafe {
             let r = core::types::LLVMInt8TypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_i16(c:Context) -> Integer {
+    pub fn new_i16(c:&Context) -> Integer {
         unsafe {
             let r = core::types::LLVMInt16TypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_i32(c:Context) -> Integer {
+    pub fn new_i32(c:&Context) -> Integer {
         unsafe {
             let r = core::types::LLVMInt32TypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_i64(c:Context) -> Integer {
+    pub fn new_i64(c:&Context) -> Integer {
         unsafe {
             let r = core::types::LLVMInt64TypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_from_width(c:Context, bits: uint) -> Integer {
+    pub fn new_from_width(c:&Context, bits: uint) -> Integer {
         unsafe {
             let r = core::types::LLVMIntTypeInContext(c.to_ref(), bits as std::libc::c_uint);
             Wrapper::from_ref(r)
@@ -354,7 +354,7 @@ impl Ty for Struct {
 }
 
 impl Struct {
-    pub fn new(c: Context, elements: &[Type], packed: bool) -> Struct {
+    pub fn new(c: &Context, elements: &[Type], packed: bool) -> Struct {
         let cr = c.to_ref();
         let llelems = do elements.map |t| {
             t.to_ref()
@@ -368,7 +368,7 @@ impl Struct {
         Wrapper::from_ref(r)
     }
 
-    pub fn new_named(c: Context, name: &str, elements: &[Type], packed: bool) -> Struct {
+    pub fn new_named(c: &Context, name: &str, elements: &[Type], packed: bool) -> Struct {
         unsafe {
             let cr = c.to_ref();
             let r = do str::as_c_str(name) |s| {
