@@ -4,7 +4,7 @@ use super::*;
 use std::vec;
 use std::str;
 
-pub trait Ty {
+pub trait Ty : Wrapper<TypeRef> {
     pub fn kind() -> Kind;
     pub fn is_sized(&self) -> bool;
 }
@@ -123,7 +123,7 @@ impl Ty for Type {
 }
 
 impl Type {
-    pub fn try_cast<T:Ty+Wrapper<TypeRef>>(&self) -> Option<T> {
+    pub fn try_cast<T:Ty>(&self) -> Option<T> {
         use std::cast;
 
         let llkind = unsafe { core::types::LLVMGetTypeKind(self.r) };
@@ -152,7 +152,7 @@ impl Type {
         }
     }
 
-    pub fn cast<T:Ty+Wrapper<TypeRef>>(&self) -> T {
+    pub fn cast<T:Ty>(&self) -> T {
         self.try_cast().unwrap()
     }
 }
@@ -430,7 +430,7 @@ impl<T> Ty for Array<T> {
     }
 }
 
-impl<T:Ty+Wrapper<TypeRef>> Array<T> {
+impl<T:Ty> Array<T> {
     pub fn new(ty: T, size: uint) -> Vector<T> {
         unsafe {
             let r = core::types::LLVMArrayType(ty.to_ref(), size as std::libc::c_uint);
@@ -461,7 +461,7 @@ impl<T> Ty for Vector<T> {
     }
 }
 
-impl<T:Ty+Wrapper<TypeRef>> Vector<T> {
+impl<T:Ty> Vector<T> {
     pub fn new(ty: T, size: uint) -> Vector<T> {
         unsafe {
             let r = core::types::LLVMVectorType(ty.to_ref(), size as std::libc::c_uint);
@@ -493,7 +493,7 @@ impl<T> Ty for Pointer<T> {
     }
 }
 
-impl<T:Ty+Wrapper<TypeRef>> Pointer<T> {
+impl<T:Ty> Pointer<T> {
     pub fn new(ty: T, address_space: uint) -> Pointer<T> {
         unsafe {
             let r = core::types::LLVMPointerType(ty.to_ref(), address_space as std::libc::c_uint);

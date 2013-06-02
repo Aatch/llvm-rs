@@ -843,17 +843,17 @@ pub mod function {
         #[fast_ffi]
         pub fn LLVMSetGC(Fn: ValueRef, Name: *c_char);
         #[fast_ffi]
-        pub fn LLVMAddFunctionAttr(Fn: ValueRef, PA: c_uint, HighPA: c_uint);
+        pub fn LLVMAddFunctionAttr(Fn: ValueRef, PA: c_ulonglong);
         #[fast_ffi]
         pub fn LLVMGetFunctionAttr(Fn: ValueRef) -> c_ulonglong;
         #[fast_ffi]
-        pub fn LLVMRemoveFunctionAttr(Fn: ValueRef, PA: c_ulonglong, HighPA: c_ulonglong);
+        pub fn LLVMRemoveFunctionAttr(Fn: ValueRef, PA: c_ulonglong);
 
         /* Operations on parameters */
         #[fast_ffi]
         pub fn LLVMCountParams(Fn: ValueRef) -> c_uint;
         #[fast_ffi]
-        pub fn LLVMGetParams(Fn: ValueRef, Params: *ValueRef);
+        pub fn LLVMGetParams(Fn: ValueRef, Params: *mut ValueRef);
         #[fast_ffi]
         pub fn LLVMGetParam(Fn: ValueRef, Index: c_uint) -> ValueRef;
         #[fast_ffi]
@@ -867,11 +867,11 @@ pub mod function {
         #[fast_ffi]
         pub fn LLVMGetPreviousParam(Arg: ValueRef) -> ValueRef;
         #[fast_ffi]
-        pub fn LLVMAddAttribute(Arg: ValueRef, PA: c_uint);
+        pub fn LLVMAddAttribute(Arg: ValueRef, PA: c_ulonglong);
         #[fast_ffi]
-        pub fn LLVMRemoveAttribute(Arg: ValueRef, PA: c_uint);
+        pub fn LLVMRemoveAttribute(Arg: ValueRef, PA: c_ulonglong);
         #[fast_ffi]
-        pub fn LLVMGetAttribute(Arg: ValueRef) -> c_uint;
+        pub fn LLVMGetAttribute(Arg: ValueRef) -> c_ulonglong;
         #[fast_ffi]
         pub fn LLVMSetParamAlignment(Arg: ValueRef, align: c_uint);
 

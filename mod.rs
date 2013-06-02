@@ -15,6 +15,7 @@ pub mod ffi {
 }
 
 pub mod ty;
+pub mod value;
 
 pub struct Context {
     priv r: ContextRef,
