@@ -252,7 +252,7 @@ impl IRBuilder {
     }
 
     pub fn fadd<V1:Val<ty::Real>,V2:Val<ty::Real>>(
-        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<ty::Real> {
         unsafe {
             do str::as_c_str(name) |s| {
                 let r = LLVMBuildFAdd(self.r, lhs.to_ref(), rhs.to_ref(), s);
@@ -292,7 +292,7 @@ impl IRBuilder {
     }
 
     pub fn fsub<V1:Val<ty::Real>,V2:Val<ty::Real>>(
-        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<ty::Real> {
         unsafe {
             do str::as_c_str(name) |s| {
                 let r = LLVMBuildFSub(self.r, lhs.to_ref(), rhs.to_ref(), s);
@@ -332,7 +332,7 @@ impl IRBuilder {
     }
 
     pub fn fmul<V1:Val<ty::Real>,V2:Val<ty::Real>>(
-        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<ty::Real> {
         unsafe {
             do str::as_c_str(name) |s| {
                 let r = LLVMBuildFMul(self.r, lhs.to_ref(), rhs.to_ref(), s);
@@ -372,7 +372,7 @@ impl IRBuilder {
     }
 
     pub fn fdiv<V1:Val<ty::Real>,V2:Val<ty::Real>>(
-        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<ty::Real> {
         unsafe {
             do str::as_c_str(name) |s| {
                 let r = LLVMBuildFDiv(self.r, lhs.to_ref(), rhs.to_ref(), s);
@@ -402,7 +402,7 @@ impl IRBuilder {
     }
 
     pub fn frem<V1:Val<ty::Real>,V2:Val<ty::Real>>(
-        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
+        &self, lhs: V1, rhs: V2, name: &str) -> Instruction<ty::Real> {
         unsafe {
             do str::as_c_str(name) |s| {
                 let r = LLVMBuildFRem(self.r, lhs.to_ref(), rhs.to_ref(), s);
@@ -456,6 +456,151 @@ impl IRBuilder {
         unsafe {
             do str::as_c_str(name) |s| {
                 let r = LLVMBuildXor(self.r, lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn neg<T:ty::Ty,V:Val<T>>(&self, val: V, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildNeg(self.r, val.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn nsw_neg<T:ty::Ty,V:Val<T>>(&self, val: V, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildNSWNeg(self.r, val.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn nuw_neg<T:ty::Ty,V:Val<T>>(&self, val: V, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildNUWNeg(self.r, val.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn fneg<V:Val<ty::Real>>(&self, val: V, name: &str) -> Instruction<ty::Real> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildFNeg(self.r, val.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn not<T:ty::Ty,V:Val<T>>(&self, val: V, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildNot(self.r, val.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn malloc<T:ty::Ty>(&self, ty: T, name: &str) -> Instruction<ty::Pointer<T>> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildMalloc(self.r, ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn array_malloc<T:ty::Ty,I:Val<ty::Integer>>(
+        self, ty: T, size: I, name: &str) -> Instruction<ty::Pointer<T>> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildArrayMalloc(self.r, ty.to_ref(), size.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn alloca<T:ty::Ty>(&self, ty: T, name: &str) -> Instruction<ty::Pointer<T>> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildAlloca(self.r, ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn array_alloca<T:ty::Ty,I:Val<ty::Integer>>(
+        &self, ty: T, size: I, name: &str) -> Instruction<ty::Pointer<T>> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildArrayAlloca(self.r, ty.to_ref(), size.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn free<T:ty::Ty,VP:Val<ty::Pointer<T>>>(&self, v: VP) -> Instruction<ty::Void> {
+        unsafe {
+            let r = LLVMBuildFree(self.r, v.to_ref());
+            Wrapper::from_ref(r)
+        }
+    }
+
+    pub fn load<T:ty::Ty,V:Val<ty::Pointer<T>>>(&self, v: V, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildLoad(self.r, v.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn store<T:ty::Ty,V:Val<T>,VP:Val<ty::Pointer<T>>>(
+        &self, val: V, ptr: VP) -> Instruction<ty::Void> {
+        unsafe {
+            let r = LLVMBuildStore(self.r, val.to_ref(), ptr.to_ref());
+            Wrapper::from_ref(r)
+        }
+    }
+
+    pub fn gep<T:ty::Ty,VP:Val<ty::Pointer<T>>,VI:Val<ty::Integer>>(
+        &self, ptr: VP, idxs: &[VI], name: &str) -> Instruction<ty::Pointer<ty::Type>> {
+        unsafe {
+            let llis = do idxs.map |i| { i.to_ref() };
+            do str::as_c_str(name) |s| {
+                do vec::as_imm_buf(llis) |b, len| {
+                    let r = LLVMBuildGEP(self.r, ptr.to_ref(),
+                                         b, len as std::libc::c_uint, s);
+                    Wrapper::from_ref(r)
+                }
+            }
+        }
+    }
+
+    pub fn inbounds_gep<T:ty::Ty,VP:Val<ty::Pointer<T>>,VI:Val<ty::Integer>>(
+        &self, ptr: VP, idxs: &[VI], name: &str) -> Instruction<ty::Pointer<ty::Type>> {
+        unsafe {
+            let llis = do idxs.map |i| { i.to_ref() };
+            do str::as_c_str(name) |s| {
+                do vec::as_imm_buf(llis) |b, len| {
+                    let r = LLVMBuildInBoundsGEP(self.r, ptr.to_ref(),
+                                         b, len as std::libc::c_uint, s);
+                    Wrapper::from_ref(r)
+                }
+            }
+        }
+    }
+
+    pub fn struct_gep<VP:Val<ty::Struct>>(&self, ptr: VP, idx: uint, name: &str)
+                    -> Instruction<ty::Type> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildStructGEP(self.r, ptr.to_ref(), idx as std::libc::c_uint, s);
                 Wrapper::from_ref(r)
             }
         }
