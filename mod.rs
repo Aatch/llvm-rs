@@ -6,6 +6,7 @@
 
 use ffi::core::*;
 use std::str;
+use std::vec;
 use std::ptr;
 
 pub mod ffi {
@@ -179,6 +180,52 @@ impl<'self> Module<'self> {
             do str::as_c_str(name) |s| {
                 let TR = module::LLVMGetTypeByName(self.r, s);
                 Wrapper::from_ref(TR)
+            }
+        }
+    }
+
+    pub fn get_named_md_operands(&self, name: &str) -> ~[value::Metadata] {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let num_ops = module::LLVMGetNamedMetadataNumOperands(self.r, s) as uint;
+                let mut buf : ~[ValueRef] = vec::with_capacity(num_ops);
+                module::LLVMGetNamedMetadataOperands(self.r, s, vec::raw::to_mut_ptr(buf));
+                do buf.map |&VR| {
+                    let t : value::Metadata = Wrapper::from_ref(VR);
+                    t
+                }
+            }
+        }
+    }
+
+    pub fn add_named_md_operand(&mut self, name: &str, val: value::Metadata) {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                module::LLVMAddNamedMetadataOperand(self.r, s, val.to_ref());
+            }
+        }
+    }
+
+    pub fn add_function(&mut self, name: &str, fty: ty::Function) -> value::Function {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = module::LLVMAddFunction(self.r, s, fty.to_ref());
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn each_function(&self, f:&fn(value::Function) -> bool) -> bool {
+        unsafe {
+            let mut fr = module::LLVMGetFirstFunction(self.r);
+            loop {
+                if fr.is_null() { return true }
+
+                if !f(Wrapper::from_ref(fr)) {
+                    return false;
+                }
+
+                fr = module::LLVMGetNextFunction(fr);
             }
         }
     }
