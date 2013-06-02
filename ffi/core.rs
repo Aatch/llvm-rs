@@ -128,8 +128,6 @@ pub enum RealPredicate {
     RealPredicateTrue = 15,
 }
 
-// The LLVM TypeKind type - must stay in sync with the def of
-// LLVMTypeKind in llvm/include/llvm-c/Core.h
 pub type TypeKind = u32;
 pub static Void: TypeKind      = 0;
 pub static Half: TypeKind      = 1;
@@ -273,11 +271,14 @@ pub enum OpCode {
     LandingPad     = 59
 }
 
-extern {
+pub extern {
     #[fast_ffi]
     pub fn LLVMInitializeCore(R: PassRegistryRef);
     #[fast_ffi]
     pub fn LLVMShutdown();
+
+    #[fast_ffi]
+    pub fn LLVMDisposeMessage(Message: *c_char);
 
     // Threading
     #[fast_ffi]
@@ -292,7 +293,7 @@ pub mod context {
     use super::*;
     use std::libc::*;
 
-    extern {
+    pub extern {
         #[fast_ffi]
         pub fn LLVMContextCreate() -> ContextRef;
         #[fast_ffi]
@@ -300,7 +301,7 @@ pub mod context {
         #[fast_ffi]
         pub fn LLVMContextDispose(C: ContextRef);
         #[fast_ffi]
-        pub fn LLVMGetMDKindIDInContext(C:ContextRef, name:*c_char, SLen:c_uint);
+        pub fn LLVMGetMDKindIDInContext(C:ContextRef, name:*c_char, SLen:c_uint) -> c_uint;
     }
 }
 
@@ -308,41 +309,41 @@ pub mod module {
     use super::*;
     use std::libc::*;
 
-    extern {
+    pub extern {
         #[fast_ffi]
-        pub fn LLVMModuleCreateWithName(MID:*const c_char) -> ModuleRef;
+        pub fn LLVMModuleCreateWithName(MID:*c_char) -> ModuleRef;
         #[fast_ffi]
-        pub fn LLVMModuleCreateWithNameInContext(MID:*const c_char, C:ContextRef) -> ModuleRef;
+        pub fn LLVMModuleCreateWithNameInContext(MID:*c_char, C:ContextRef) -> ModuleRef;
         #[fast_ffi]
         pub fn LLVMDisposeModule(M:ModuleRef);
         #[fast_ffi]
-        pub fn LLVMGetDataLayout(M:ModuleRef) -> *const c_char;
+        pub fn LLVMGetDataLayout(M:ModuleRef) -> *c_char;
         #[fast_ffi]
         pub fn LLVMSetDataLayout(M:ModuleRef,Triple:*c_char);
         #[fast_ffi]
-        pub fn LLVMGetTarget(M:ModuleRef) -> *const c_char;
+        pub fn LLVMGetTarget(M:ModuleRef) -> *c_char;
         #[fast_ffi]
-        pub fn LLVMSetTarget(M:ModuleRef,Triple:*const c_char);
+        pub fn LLVMSetTarget(M:ModuleRef,Triple:*c_char);
         #[fast_ffi]
         pub fn LLVMDumpModule(M:ModuleRef);
         #[fast_ffi]
-        pub fn LLVMPrintModuleToFile(M:ModuleRef, Filename:*const c_char, ErrMsg:**c_char) -> Bool;
+        pub fn LLVMPrintModuleToFile(M:ModuleRef, Filename:*c_char, ErrMsg:*mut *c_char) -> Bool;
         #[fast_ffi]
-        pub fn LLVMSetModuleInlineAsm(M:ModuleRef, Asm:*const c_char);
+        pub fn LLVMSetModuleInlineAsm(M:ModuleRef, Asm:*c_char);
         #[fast_ffi]
         pub fn LLVMGetModuleContext(M:ModuleRef) -> ContextRef;
         #[fast_ffi]
-        pub fn LLVMGetTypeByName(M:ModuleRef, Name:*const c_char) -> TypeRef;
+        pub fn LLVMGetTypeByName(M:ModuleRef, Name:*c_char) -> TypeRef;
         #[fast_ffi]
-        pub fn LLVMGetNamedMetadataNumOperands(M:ModuleRef, name:*const c_char) -> c_uint;
+        pub fn LLVMGetNamedMetadataNumOperands(M:ModuleRef, name:*c_char) -> c_uint;
         #[fast_ffi]
-        pub fn LLVMGetNamedMetadataOperands(M:ModuleRef, name:*const c_char, Dest: *mut ValueRef);
+        pub fn LLVMGetNamedMetadataOperands(M:ModuleRef, name:*c_char, Dest: *mut ValueRef);
         #[fast_ffi]
-        pub fn LLVMAddNamedMetadataOperand(M:ModuleRef, name:*const c_char, Val:ValueRef);
+        pub fn LLVMAddNamedMetadataOperand(M:ModuleRef, name:*c_char, Val:ValueRef);
         #[fast_ffi]
-        pub fn LLVMAddFunction(M:ModuleRef, Name:*const c_char, FunctionTy:TypeRef) -> ValueRef;
+        pub fn LLVMAddFunction(M:ModuleRef, Name:*c_char, FunctionTy:TypeRef) -> ValueRef;
         #[fast_ffi]
-        pub fn LLVMGetNamedFunction(M:ModuleRef, Name:*const c_char) -> ValueRef;
+        pub fn LLVMGetNamedFunction(M:ModuleRef, Name:*c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMGetFirstFunction(M:ModuleRef) -> ValueRef;
         #[fast_ffi]
@@ -358,7 +359,7 @@ pub mod types {
     use super::*;
     use std::libc::*;
 
-    extern {
+    pub extern {
         #[fast_ffi]
         pub fn LLVMGetTypeKind(Ty:TypeRef) -> TypeKind;
         #[fast_ffi]
@@ -446,9 +447,9 @@ pub mod types {
                               ElementCount: c_uint,
                               Packed: Bool) -> TypeRef;
         #[fast_ffi]
-        pub fn LLVMStructCreateNamed(C: ContextRef, Name: *const c_char) -> TypeRef;
+        pub fn LLVMStructCreateNamed(C: ContextRef, Name: *c_char) -> TypeRef;
         #[fast_ffi]
-        pub fn LLVMGetStructName(Ty: TypeRef) -> *const c_char;
+        pub fn LLVMGetStructName(Ty: TypeRef) -> *c_char;
         #[fast_ffi]
         pub fn LLVMStructSetBody(StructTy: TypeRef,
                                  ElementTypes: *TypeRef,
@@ -496,15 +497,15 @@ pub mod value {
     use super::*;
     use std::libc::*;
 
-    extern {
+    pub extern {
 
         // General APIs
         #[fast_ffi]
         pub fn LLVMTypeOf(Val: ValueRef) -> TypeRef;
         #[fast_ffi]
-        pub fn LLVMGetValueName(Val: ValueRef) -> *const c_char;
+        pub fn LLVMGetValueName(Val: ValueRef) -> *c_char;
         #[fast_ffi]
-        pub fn LLVMSetValueName(Val: ValueRef, Name: *const c_char);
+        pub fn LLVMSetValueName(Val: ValueRef, Name: *c_char);
         #[fast_ffi]
         pub fn LLVMDumpValue(Val: ValueRef);
         #[fast_ffi]
@@ -538,7 +539,7 @@ pub mod constant {
     use super::*;
     use std::libc::*;
 
-    extern {
+    pub extern {
         // Constants
         #[fast_ffi]
         pub fn LLVMConstNull(Ty: TypeRef) -> ValueRef;
@@ -753,7 +754,7 @@ pub mod global {
     use super::*;
     use std::libc::*;
 
-    extern {
+    pub extern {
         // Global Values
         #[fast_ffi]
         pub fn LLVMGetGlobalParent(Global: ValueRef) -> ModuleRef;
@@ -827,7 +828,7 @@ pub mod function {
     use super::*;
     use std::libc::*;
 
-    extern {
+    pub extern {
         /* Operations on functions */
         #[fast_ffi]
         pub fn LLVMDeleteFunction(Fn: ValueRef);
@@ -881,17 +882,17 @@ pub mod metadata {
     use super::*;
     use std::libc::*;
 
-    extern {
+    pub extern {
         #[fast_ffi]
-        pub fn LLVMMDStringInContext(C: ContextRef, Str: *const c_char, SLen: c_uint) -> ValueRef;
+        pub fn LLVMMDStringInContext(C: ContextRef, Str: *c_char, SLen: c_uint) -> ValueRef;
         #[fast_ffi]
-        pub fn LLVMMDString(Str: *const c_char, SLen: c_uint) -> ValueRef;
+        pub fn LLVMMDString(Str: *c_char, SLen: c_uint) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMMDNodeInContext(C: ContextRef, Vals: *ValueRef, Count: c_uint) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMMDNode(Vals: ValueRef, Count: c_uint) -> ValueRef;
         #[fast_ffi]
-        pub fn LLVMGetMDString(V: ValueRef, Len: c_uint) -> *const c_char;
+        pub fn LLVMGetMDString(V: ValueRef, Len: c_uint) -> *c_char;
         #[fast_ffi]
         pub fn LLVMGetMDNodeNumOperands(V: ValueRef) -> c_uint;
         #[fast_ffi]
@@ -904,7 +905,7 @@ pub mod bb {
     use super::*;
     use std::libc::*;
 
-    extern {
+    pub extern {
         #[fast_ffi]
         pub fn LLVMBasicBlockAsValue(BB: BasicBlockRef) -> ValueRef;
         #[fast_ffi]
@@ -932,15 +933,15 @@ pub mod bb {
         #[fast_ffi]
         pub fn LLVMAppendBasicBlockInContext(C: ContextRef,
                                              Fn: ValueRef,
-                                             Name: *const c_char) -> BasicBlockRef;
+                                             Name: *c_char) -> BasicBlockRef;
         #[fast_ffi]
-        pub fn LLVMAppendBasicBlock(Fn: ValueRef, Name: *const c_char) -> BasicBlockRef;
+        pub fn LLVMAppendBasicBlock(Fn: ValueRef, Name: *c_char) -> BasicBlockRef;
         #[fast_ffi]
         pub fn LLVMInsertBasicBlockInContext(C: ContextRef,
                                              BB: BasicBlockRef,
-                                             Name: *const c_char) -> BasicBlockRef;
+                                             Name: *c_char) -> BasicBlockRef;
         #[fast_ffi]
-        pub fn LLVMInsertBasicBlock(BB: BasicBlockRef, Name: *const c_char) -> BasicBlockRef;
+        pub fn LLVMInsertBasicBlock(BB: BasicBlockRef, Name: *c_char) -> BasicBlockRef;
         #[fast_ffi]
         pub fn LLVMDeleteBasicBlock(BB: BasicBlockRef);
         #[fast_ffi]
@@ -960,7 +961,7 @@ pub mod instruction {
     use super::*;
     use std::libc::*;
 
-    extern {
+    pub extern {
         #[fast_ffi]
         pub fn LLVMHasMetadata(Val: ValueRef) -> c_int;
         #[fast_ffi]
@@ -1014,7 +1015,7 @@ pub mod ir_builder {
     use super::*;
     use std::libc::*;
 
-    extern {
+    pub extern {
 
         #[fast_ffi]
         pub fn LLVMCreateBuilderInContext(C: ContextRef) -> BuilderRef;
@@ -1033,7 +1034,7 @@ pub mod ir_builder {
         #[fast_ffi]
         pub fn LLVMInsertIntoBuilder(Builder: BuilderRef, Instr: ValueRef);
         #[fast_ffi]
-        pub fn LLVMInsertIntoBuilderWithName(Builder: BuilderRef, Instr: ValueRef, Name: *const c_char);
+        pub fn LLVMInsertIntoBuilderWithName(Builder: BuilderRef, Instr: ValueRef, Name: *c_char);
         #[fast_ffi]
         pub fn LLVMDisposeBuilder(Builder: BuilderRef);
 
@@ -1073,13 +1074,13 @@ pub mod ir_builder {
                                NumArgs: c_uint,
                                Then: BasicBlockRef,
                                Catch: BasicBlockRef,
-                               Name: *const c_char) -> ValueRef;
+                               Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildLandingPad(B: BuilderRef,
                                    Ty: TypeRef,
                                    PersFn: ValueRef,
                                    NumClauses: c_uint,
-                                   Name: *const c_char) -> ValueRef;
+                                   Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildResume(B: BuilderRef, Exn: ValueRef) -> ValueRef;
         #[fast_ffi]
@@ -1106,168 +1107,168 @@ pub mod ir_builder {
         pub fn LLVMBuildAdd(B: BuilderRef,
                             LHS: ValueRef,
                             RHS: ValueRef,
-                            Name: *const c_char) -> ValueRef;
+                            Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildNSWAdd(B: BuilderRef,
                                LHS: ValueRef,
                                RHS: ValueRef,
-                               Name: *const c_char) -> ValueRef;
+                               Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildNUWAdd(B: BuilderRef,
                                LHS: ValueRef,
                                RHS: ValueRef,
-                               Name: *const c_char) -> ValueRef;
+                               Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildFAdd(B: BuilderRef,
                              LHS: ValueRef,
                              RHS: ValueRef,
-                             Name: *const c_char) -> ValueRef;
+                             Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildSub(B: BuilderRef,
                             LHS: ValueRef,
                             RHS: ValueRef,
-                            Name: *const c_char) -> ValueRef;
+                            Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildNSWSub(B: BuilderRef,
                                LHS: ValueRef,
                                RHS: ValueRef,
-                               Name: *const c_char) -> ValueRef;
+                               Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildNUWSub(B: BuilderRef,
                                LHS: ValueRef,
                                RHS: ValueRef,
-                               Name: *const c_char) -> ValueRef;
+                               Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildFSub(B: BuilderRef,
                              LHS: ValueRef,
                              RHS: ValueRef,
-                             Name: *const c_char) -> ValueRef;
+                             Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildMul(B: BuilderRef,
                             LHS: ValueRef,
                             RHS: ValueRef,
-                            Name: *const c_char) -> ValueRef;
+                            Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildNSWMul(B: BuilderRef,
                                LHS: ValueRef,
                                RHS: ValueRef,
-                               Name: *const c_char) -> ValueRef;
+                               Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildNUWMul(B: BuilderRef,
                                LHS: ValueRef,
                                RHS: ValueRef,
-                               Name: *const c_char) -> ValueRef;
+                               Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildFMul(B: BuilderRef,
                              LHS: ValueRef,
                              RHS: ValueRef,
-                             Name: *const c_char) -> ValueRef;
+                             Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildUDiv(B: BuilderRef,
                              LHS: ValueRef,
                              RHS: ValueRef,
-                             Name: *const c_char) -> ValueRef;
+                             Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildSDiv(B: BuilderRef,
                              LHS: ValueRef,
                              RHS: ValueRef,
-                             Name: *const c_char) -> ValueRef;
+                             Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildExactSDiv(B: BuilderRef,
                                   LHS: ValueRef,
                                   RHS: ValueRef,
-                                  Name: *const c_char) -> ValueRef;
+                                  Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildFDiv(B: BuilderRef,
                              LHS: ValueRef,
                              RHS: ValueRef,
-                             Name: *const c_char) -> ValueRef;
+                             Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildURem(B: BuilderRef,
                              LHS: ValueRef,
                              RHS: ValueRef,
-                             Name: *const c_char) -> ValueRef;
+                             Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildSRem(B: BuilderRef,
                              LHS: ValueRef,
                              RHS: ValueRef,
-                             Name: *const c_char) -> ValueRef;
+                             Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildFRem(B: BuilderRef,
                              LHS: ValueRef,
                              RHS: ValueRef,
-                             Name: *const c_char) -> ValueRef;
+                             Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildShl(B: BuilderRef,
                             LHS: ValueRef,
                             RHS: ValueRef,
-                            Name: *const c_char) -> ValueRef;
+                            Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildLShr(B: BuilderRef,
                              LHS: ValueRef,
                              RHS: ValueRef,
-                             Name: *const c_char) -> ValueRef;
+                             Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildAShr(B: BuilderRef,
                              LHS: ValueRef,
                              RHS: ValueRef,
-                             Name: *const c_char) -> ValueRef;
+                             Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildAnd(B: BuilderRef,
                             LHS: ValueRef,
                             RHS: ValueRef,
-                            Name: *const c_char) -> ValueRef;
+                            Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildOr(B: BuilderRef,
                            LHS: ValueRef,
                            RHS: ValueRef,
-                           Name: *const c_char) -> ValueRef;
+                           Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildXor(B: BuilderRef,
                             LHS: ValueRef,
                             RHS: ValueRef,
-                            Name: *const c_char) -> ValueRef;
+                            Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildBinOp(B: BuilderRef,
                               Op: c_uint,
                               LHS: ValueRef,
                               RHS: ValueRef,
-                              Name: *const c_char) -> ValueRef;
+                              Name: *c_char) -> ValueRef;
         #[fast_ffi]
-        pub fn LLVMBuildNeg(B: BuilderRef, V: ValueRef, Name: *const c_char) -> ValueRef;
+        pub fn LLVMBuildNeg(B: BuilderRef, V: ValueRef, Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildNSWNeg(B: BuilderRef, V: ValueRef,
-                               Name: *const c_char) -> ValueRef;
+                               Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildNUWNeg(B: BuilderRef, V: ValueRef,
-                               Name: *const c_char) -> ValueRef;
+                               Name: *c_char) -> ValueRef;
         #[fast_ffi]
-        pub fn LLVMBuildFNeg(B: BuilderRef, V: ValueRef, Name: *const c_char) -> ValueRef;
+        pub fn LLVMBuildFNeg(B: BuilderRef, V: ValueRef, Name: *c_char) -> ValueRef;
         #[fast_ffi]
-        pub fn LLVMBuildNot(B: BuilderRef, V: ValueRef, Name: *const c_char) -> ValueRef;
+        pub fn LLVMBuildNot(B: BuilderRef, V: ValueRef, Name: *c_char) -> ValueRef;
 
         /* Memory */
         #[fast_ffi]
-        pub fn LLVMBuildMalloc(B: BuilderRef, Ty: TypeRef, Name: *const c_char) -> ValueRef;
+        pub fn LLVMBuildMalloc(B: BuilderRef, Ty: TypeRef, Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildArrayMalloc(B: BuilderRef,
                                     Ty: TypeRef,
                                     Val: ValueRef,
-                                    Name: *const c_char) -> ValueRef;
+                                    Name: *c_char) -> ValueRef;
         #[fast_ffi]
-        pub fn LLVMBuildAlloca(B: BuilderRef, Ty: TypeRef, Name: *const c_char) -> ValueRef;
+        pub fn LLVMBuildAlloca(B: BuilderRef, Ty: TypeRef, Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildArrayAlloca(B: BuilderRef,
                                     Ty: TypeRef,
                                     Val: ValueRef,
-                                    Name: *const c_char) -> ValueRef;
+                                    Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildFree(B: BuilderRef,
                              PointerVal: ValueRef) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildLoad(B: BuilderRef,
                              PointerVal: ValueRef,
-                             Name: *const c_char) -> ValueRef;
+                             Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildStore(B: BuilderRef,
                               Val: ValueRef,
@@ -1277,26 +1278,26 @@ pub mod ir_builder {
                             Pointer: ValueRef,
                             Indices: *ValueRef,
                             NumIndices: c_uint,
-                            Name: *const c_char) -> ValueRef;
+                            Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildInBoundsGEP(B: BuilderRef,
                                     Pointer: ValueRef,
                                     Indices: *ValueRef,
                                     NumIndices: c_uint,
-                                    Name: *const c_char) -> ValueRef;
+                                    Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildStructGEP(B: BuilderRef,
                                   Pointer: ValueRef,
                                   Idx: c_uint,
-                                  Name: *const c_char) -> ValueRef;
+                                  Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildGlobalString(B: BuilderRef,
-                                     Str: *const c_char,
-                                     Name: *const c_char) -> ValueRef;
+                                     Str: *c_char,
+                                     Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildGlobalStringPtr(B: BuilderRef,
-                                        Str: *const c_char,
-                                        Name: *const c_char) -> ValueRef;
+                                        Str: *c_char,
+                                        Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMGetVolatile(MemoryAccessInst: ValueRef) -> Bool;
         #[fast_ffi]
@@ -1307,98 +1308,98 @@ pub mod ir_builder {
         pub fn LLVMBuildTrunc(B: BuilderRef,
                               Val: ValueRef,
                               DestTy: TypeRef,
-                              Name: *const c_char) -> ValueRef;
+                              Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildZExt(B: BuilderRef,
                              Val: ValueRef,
                              DestTy: TypeRef,
-                             Name: *const c_char) -> ValueRef;
+                             Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildSExt(B: BuilderRef,
                              Val: ValueRef,
                              DestTy: TypeRef,
-                             Name: *const c_char) -> ValueRef;
+                             Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildFPToUI(B: BuilderRef,
                                Val: ValueRef,
                                DestTy: TypeRef,
-                               Name: *const c_char) -> ValueRef;
+                               Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildFPToSI(B: BuilderRef,
                                Val: ValueRef,
                                DestTy: TypeRef,
-                               Name: *const c_char) -> ValueRef;
+                               Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildUIToFP(B: BuilderRef,
                                Val: ValueRef,
                                DestTy: TypeRef,
-                               Name: *const c_char) -> ValueRef;
+                               Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildSIToFP(B: BuilderRef,
                                Val: ValueRef,
                                DestTy: TypeRef,
-                               Name: *const c_char) -> ValueRef;
+                               Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildFPTrunc(B: BuilderRef,
                                 Val: ValueRef,
                                 DestTy: TypeRef,
-                                Name: *const c_char) -> ValueRef;
+                                Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildFPExt(B: BuilderRef,
                               Val: ValueRef,
                               DestTy: TypeRef,
-                              Name: *const c_char) -> ValueRef;
+                              Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildPtrToInt(B: BuilderRef,
                                  Val: ValueRef,
                                  DestTy: TypeRef,
-                                 Name: *const c_char) -> ValueRef;
+                                 Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildIntToPtr(B: BuilderRef,
                                  Val: ValueRef,
                                  DestTy: TypeRef,
-                                 Name: *const c_char) -> ValueRef;
+                                 Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildBitCast(B: BuilderRef,
                                 Val: ValueRef,
                                 DestTy: TypeRef,
-                                Name: *const c_char) -> ValueRef;
+                                Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildZExtOrBitCast(B: BuilderRef,
                                       Val: ValueRef,
                                       DestTy: TypeRef,
-                                      Name: *const c_char) -> ValueRef;
+                                      Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildSExtOrBitCast(B: BuilderRef,
                                       Val: ValueRef,
                                       DestTy: TypeRef,
-                                      Name: *const c_char) -> ValueRef;
+                                      Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildTruncOrBitCast(B: BuilderRef,
                                        Val: ValueRef,
                                        DestTy: TypeRef,
-                                       Name: *const c_char) -> ValueRef;
+                                       Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildCast(B: BuilderRef,
                              Op: c_uint,
                              Val: ValueRef,
                              DestTy: TypeRef,
-                             Name: *const c_char) -> ValueRef;
+                             Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildPointerCast(B: BuilderRef,
                                     Val: ValueRef,
                                     DestTy: TypeRef,
-                                    Name: *const c_char) -> ValueRef;
+                                    Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildIntCast(B: BuilderRef,
                                 Val: ValueRef, /*Signed cast!*/
                                 DestTy: TypeRef,
-                                Name: *const c_char) -> ValueRef;
+                                Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildFPCast(B: BuilderRef,
                                Val: ValueRef,
                                DestTy: TypeRef,
-                               Name: *const c_char) -> ValueRef;
+                               Name: *c_char) -> ValueRef;
 
         /* Comparisons */
         #[fast_ffi]
@@ -1406,76 +1407,76 @@ pub mod ir_builder {
                              Op: c_uint,
                              LHS: ValueRef,
                              RHS: ValueRef,
-                             Name: *const c_char) -> ValueRef;
+                             Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildFCmp(B: BuilderRef,
                              Op: c_uint,
                              LHS: ValueRef,
                              RHS: ValueRef,
-                             Name: *const c_char) -> ValueRef;
+                             Name: *c_char) -> ValueRef;
 
         /* Miscellaneous instructions */
         #[fast_ffi]
-        pub fn LLVMBuildPhi(B: BuilderRef, Ty: TypeRef, Name: *const c_char) -> ValueRef;
+        pub fn LLVMBuildPhi(B: BuilderRef, Ty: TypeRef, Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildCall(B: BuilderRef,
                              Fn: ValueRef,
                              Args: *ValueRef,
                              NumArgs: c_uint,
-                             Name: *const c_char) -> ValueRef;
+                             Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildSelect(B: BuilderRef,
                                If: ValueRef,
                                Then: ValueRef,
                                Else: ValueRef,
-                               Name: *const c_char) -> ValueRef;
+                               Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildVAArg(B: BuilderRef,
                               List: ValueRef,
                               Ty: TypeRef,
-                              Name: *const c_char) -> ValueRef;
+                              Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildExtractElement(B: BuilderRef,
                                        VecVal: ValueRef,
                                        Index: ValueRef,
-                                       Name: *const c_char) -> ValueRef;
+                                       Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildInsertElement(B: BuilderRef,
                                       VecVal: ValueRef,
                                       EltVal: ValueRef,
                                       Index: ValueRef,
-                                      Name: *const c_char) -> ValueRef;
+                                      Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildShuffleVector(B: BuilderRef,
                                       V1: ValueRef,
                                       V2: ValueRef,
                                       Mask: ValueRef,
-                                      Name: *const c_char) -> ValueRef;
+                                      Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildExtractValue(B: BuilderRef,
                                      AggVal: ValueRef,
                                      Index: c_uint,
-                                     Name: *const c_char) -> ValueRef;
+                                     Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildInsertValue(B: BuilderRef,
                                     AggVal: ValueRef,
                                     EltVal: ValueRef,
                                     Index: c_uint,
-                                    Name: *const c_char) -> ValueRef;
+                                    Name: *c_char) -> ValueRef;
 
         #[fast_ffi]
         pub fn LLVMBuildIsNull(B: BuilderRef,
                                Val: ValueRef,
-                               Name: *const c_char) -> ValueRef;
+                               Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildIsNotNull(B: BuilderRef,
                                   Val: ValueRef,
-                                  Name: *const c_char) -> ValueRef;
+                                  Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildPtrDiff(B: BuilderRef,
                                 LHS: ValueRef,
                                 RHS: ValueRef,
-                                Name: *const c_char) -> ValueRef;
+                                Name: *c_char) -> ValueRef;
         #[fast_ffi]
         pub fn LLVMBuildAtomicRMW(B: BuilderRef,
                                   op: c_uint,
@@ -1488,9 +1489,8 @@ pub mod ir_builder {
 
 pub mod mod_prov {
     use super::*;
-    use std::libc::*;
 
-    extern {
+    pub extern {
         #[fast_ffi]
         pub fn LLVMCreateModuleProviderForExistingModule(M:ModuleRef) -> ModuleProviderRef;
         #[fast_ffi]
@@ -1502,9 +1502,9 @@ pub mod mem_buffer {
     use super::*;
     use std::libc::*;
 
-    extern {
+    pub extern {
         #[fast_ffi]
-        pub fn LLVMCreateMemoryBufferWithContentsOfFile(Path: *const c_char,
+        pub fn LLVMCreateMemoryBufferWithContentsOfFile(Path: *c_char,
                                                         OutMemBuf: *mut MemoryBufferRef,
                                                         OutMessage: *mut *c_char) -> Bool;
         #[fast_ffi]
@@ -1512,17 +1512,17 @@ pub mod mem_buffer {
                                                OutMessage: *mut *c_char) -> Bool;
         #[fast_ffi]
         pub fn LLVMCreateMemoryBufferWithMemoryRange(
-            InputData: *const c_char,
+            InputData: *c_char,
             InputDataLength: size_t,
-            BufferName: *const c_char,
+            BufferName: *c_char,
             RequiresNullTerminator: Bool) -> MemoryBufferRef;
         #[fast_ffi]
         pub fn LLVMCreateMemoryBufferWithMemoryRangeCopy(
-            InputData: *const c_char,
+            InputData: *c_char,
             InputDataLength: size_t,
-            BufferName: *const c_char) -> MemoryBufferRef;
+            BufferName: *c_char) -> MemoryBufferRef;
         #[fast_ffi]
-        pub fn LLVMGetBufferStart(MemBuf: MemoryBufferRef) -> *const char;
+        pub fn LLVMGetBufferStart(MemBuf: MemoryBufferRef) -> *char;
         #[fast_ffi]
         pub fn LLVMGetBufferSize(MemBuf: MemoryBufferRef) -> size_t;
         #[fast_ffi]
@@ -1532,9 +1532,8 @@ pub mod mem_buffer {
 
 pub mod passes {
     use super::*;
-    use std::libc::*;
 
-    extern {
+    pub extern {
         #[fast_ffi]
         pub fn LLVMGetGlobalPassRegistry() -> PassRegistryRef;
         #[fast_ffi]
