@@ -51,7 +51,7 @@ pub trait ConstReal : ConstVal<ty::Real> {
 
 pub trait ConstArray<T:ty::Ty> : ConstVal<ty::Array<T>> {
     pub fn new(ty: T, els: ~[Constant<T>]) -> Self;
-    pub fn new_from_str(c: Context, data: &str, null_term: bool) -> Self;
+    pub fn new_from_str(c: &Context, data: &str, null_term: bool) -> Self;
 }
 
 pub trait ConstVector<T:ty::Ty> : ConstVal<ty::Vector<T>> {
@@ -99,6 +99,8 @@ pub trait FunctionVal : GlobalVal<ty::Function> {
 
     pub fn params(&self) -> ~[Param<ty::Type>];
     pub fn get_param(&self, idx: uint) -> Param<ty::Type>;
+
+    pub fn add_basic_block(&mut self, c: &Context, name: &str) -> BasicBlock;
 
 }
 
@@ -349,7 +351,7 @@ impl<T:ty::Ty> ConstArray<T> for Constant<ty::Array<T>> {
         }
     }
 
-    pub fn new_from_str(c: Context, data: &str, null_term: bool) -> Constant<ty::Array<T>> {
+    pub fn new_from_str(c: &Context, data: &str, null_term: bool) -> Constant<ty::Array<T>> {
         unsafe {
             let cr = c.to_ref();
             let no_null_term = if null_term { False } else { True };
@@ -587,6 +589,15 @@ impl FunctionVal for Global<ty::Function> {
         unsafe {
             let r = function::LLVMGetParam(self.r, idx as std::libc::c_uint);
             Wrapper::from_ref(r)
+        }
+    }
+
+    pub fn add_basic_block(&mut self, c: &Context, name: &str) -> BasicBlock {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = bb::LLVMAppendBasicBlockInContext(c.to_ref(), self.r, s);
+                Wrapper::from_ref(bb::LLVMBasicBlockAsValue(r))
+            }
         }
     }
 }

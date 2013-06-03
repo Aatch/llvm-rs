@@ -231,6 +231,15 @@ impl<'self> Module<'self> {
             }
         }
     }
+
+    pub fn add_global<T:ty::Ty>(&mut self, ty: T, name: &str) -> value::Global<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = global::LLVMAddGlobal(self.r, ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
 }
 
 #[unsafe_destructor]

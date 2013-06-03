@@ -304,7 +304,7 @@ impl Ty for Function {
 }
 
 impl Function {
-    pub fn new(ret: Type, params: &[Type], is_var_arg: bool) -> Function {
+    pub fn new<T:ty::Ty>(ret: T, params: &[Type], is_var_arg: bool) -> Function {
         let llret = ret.to_ref();
         let llparams = do params.map |t| {
             t.to_ref()
