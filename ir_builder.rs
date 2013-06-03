@@ -1,8 +1,8 @@
 use ffi::core::ir_builder::*;
-use ffi::core::{BuilderRef,bb};
-use instruction::{Instruction,SwitchInstr,LandingPad};
+use ffi::core::{BuilderRef,bb,IntPredicate,RealPredicate};
+use instruction::{Instruction,SwitchInstr,LandingPad,PhiNode,CallInst};
 use value;
-use value::{BasicBlock,Val};
+use value::{BasicBlock,Val,Global,Param};
 
 use super::*;
 
@@ -601,6 +601,285 @@ impl IRBuilder {
         unsafe {
             do str::as_c_str(name) |s| {
                 let r = LLVMBuildStructGEP(self.r, ptr.to_ref(), idx as std::libc::c_uint, s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn global_string(&self, string: &str, name: &str) -> Global<ty::Integer> {
+        unsafe {
+            do str::as_c_str(string) |d| {
+                do str::as_c_str(name) |n| {
+                    let r = LLVMBuildGlobalString(self.r, d, n);
+                    Wrapper::from_ref(r)
+                }
+            }
+        }
+    }
+
+    pub fn global_string(&self, string: &str, name: &str) -> Instruction<ty::Pointer<ty::Integer>> {
+        unsafe {
+            do str::as_c_str(string) |d| {
+                do str::as_c_str(name) |n| {
+                    let r = LLVMBuildGlobalStringPtr(self.r, d, n);
+                    Wrapper::from_ref(r)
+                }
+            }
+        }
+    }
+
+    pub fn trunc<T1:ty::Ty,T2:ty::Ty,V:Val<T1>>(
+        &self, val: V, ty: T2, name: &str) -> Instruction<T2> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildTrunc(self.r, val.to_ref(), ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn zext<T1:ty::Ty,T2:ty::Ty,V:Val<T1>>(
+        &self, val: V, ty: T2, name: &str) -> Instruction<T2> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildZExt(self.r, val.to_ref(), ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn sext<T1:ty::Ty,T2:ty::Ty,V:Val<T1>>(
+        &self, val: V, ty: T2, name: &str) -> Instruction<T2> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildSExt(self.r, val.to_ref(), ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn fp_to_ui<V:Val<ty::Real>>(
+        &self, val: V, ty: ty::Integer, name: &str) -> Instruction<ty::Integer> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildFPToUI(self.r, val.to_ref(), ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn fp_to_si<V:Val<ty::Real>>(
+        &self, val: V, ty: ty::Integer, name: &str) -> Instruction<ty::Integer> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildFPToSI(self.r, val.to_ref(), ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn ui_to_fp<V:Val<ty::Integer>>(
+        &self, val: V, ty: ty::Real, name: &str) -> Instruction<ty::Real> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildUIToFP(self.r, val.to_ref(), ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn si_to_fp<V:Val<ty::Integer>>(
+        &self, val: V, ty: ty::Real, name: &str) -> Instruction<ty::Real> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildSIToFP(self.r, val.to_ref(), ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn fptrunc<V:Val<ty::Real>>(
+        &self, val:V, ty: ty::Real, name: &str) -> Instruction<ty::Real> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildFPTrunc(self.r, val.to_ref(), ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn fpext<V:Val<ty::Real>>(
+        &self, val:V, ty: ty::Real, name: &str) -> Instruction<ty::Real> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildFPExt(self.r, val.to_ref(), ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn ptr_to_int<T:ty::Ty,VP:Val<ty::Pointer<T>>>(
+        &self, val: VP, ty: ty::Integer, name: &str) -> Instruction<ty::Integer> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildPtrToInt(self.r, val.to_ref(), ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn int_to_ptr<T:ty::Ty,V:Val<ty::Integer>>(
+        &self, val: V, ty: ty::Pointer<T>, name: &str) -> Instruction<ty::Pointer<T>> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildIntToPtr(self.r, val.to_ref(), ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn bitcast<T1:ty::Ty,T2:ty::Ty,V:Val<T1>>(
+        &self, val: V, ty: T2, name: &str) -> Instruction<T2> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildBitCast(self.r, val.to_ref(), ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn zext_or_bitcast<T1:ty::Ty,T2:ty::Ty,V:Val<T1>>(
+        &self, val: V, ty: T2, name: &str) -> Instruction<T2> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildZExtOrBitCast(self.r, val.to_ref(), ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn sext_or_bitcast<T1:ty::Ty,T2:ty::Ty,V:Val<T1>>(
+        &self, val: V, ty: T2, name: &str) -> Instruction<T2> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildSExtOrBitCast(self.r, val.to_ref(), ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn trunc_or_bitcast<T1:ty::Ty,T2:ty::Ty,V:Val<T1>>(
+        &self, val: V, ty: T2, name: &str) -> Instruction<T2> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildTruncOrBitCast(self.r, val.to_ref(), ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn pointer_cast<T1:ty::Ty,T2:ty::Ty,V:Val<ty::Pointer<T1>>>(
+        &self, val: V, ty: ty::Pointer<T2>, name: &str) -> Instruction<T2> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildPointerCast(self.r, val.to_ref(), ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn int_cast<V:Val<ty::Integer>>(&self, val: V, ty: ty::Integer, name: &str)
+        -> Instruction<ty::Integer> {
+
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildIntCast(self.r, val.to_ref(), ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn fp_cast<V:Val<ty::Real>>(&self, val: V, ty: ty::Real, name: &str)
+        -> Instruction<ty::Real> {
+
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildFPCast(self.r, val.to_ref(), ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn icmp<V1:Val<ty::Integer>,V2:Val<ty::Integer>>(
+        &self, op: IntPredicate, lhs: V1, rhs: V2, name: &str) -> Instruction<ty::Integer> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildICmp(self.r, op as std::libc::c_uint,
+                                      lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn fcmp<V1:Val<ty::Real>,V2:Val<ty::Real>>(
+        &self, op: RealPredicate, lhs: V1, rhs: V2, name: &str) -> Instruction<ty::Real> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildFCmp(self.r, op as std::libc::c_uint,
+                                      lhs.to_ref(), rhs.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn phi<T:ty::Ty>(&self, ty: T, name: &str) -> PhiNode<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildPhi(self.r, ty.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn call(&self, fun: value::Function, args: &[Param<ty::Type>],
+                name: &str) -> CallInst<ty::Type> {
+        unsafe {
+            let llargs = do args.map |a| { a.to_ref() };
+            do str::as_c_str(name) |s| {
+                do vec::as_imm_buf(llargs) |buf, len| {
+                    let r = LLVMBuildCall(self.r, fun.to_ref(),
+                                          buf, len as std::libc::c_uint, s);
+                    Wrapper::from_ref(r)
+                }
+            }
+        }
+    }
+
+    pub fn select<T:ty::Ty,VC:Val<ty::Integer>,VT:Val<T>,VE:Val<T>>(
+        self, cond: VC, then: VT, els: VE, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildSelect(self.r, cond.to_ref(), then.to_ref(), els.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn extract_element<T:ty::Ty,V1:Val<ty::Vector<T>>,V2:Val<ty::Integer>>(
+        &self, vec: V1, idx: V2, name: &str) -> Instruction<T> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildExtractElement(self.r, vec.to_ref(), idx.to_ref(), s);
+                Wrapper::from_ref(r)
+            }
+        }
+    }
+
+    pub fn ptr_diff<T:ty::Ty,V1:Val<ty::Pointer<T>>,V2:Val<ty::Pointer<T>>>(
+        &self, lhs: V1, rhs:V2, name: &str) -> Instruction<ty::Integer> {
+        unsafe {
+            do str::as_c_str(name) |s| {
+                let r = LLVMBuildPtrDiff(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
         }

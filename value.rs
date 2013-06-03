@@ -1,6 +1,6 @@
 use super::*;
 use ffi::core::{value,constant,global,function,metadata,bb};
-use ffi::core::{ValueRef,BasicBlockRef,True,False,Linkage,Visibility,ThreadLocalMode,Attribute};
+use ffi::core::{ValueRef,True,False,Linkage,Visibility,ThreadLocalMode,Attribute};
 
 use std::str;
 use std::vec;
