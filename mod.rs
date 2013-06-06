@@ -112,6 +112,7 @@ impl Context {
 impl Drop for Context {
     pub fn finalize(&self) {
         unsafe {
+            debug!("Disposing Context");
             context::LLVMContextDispose(self.r);
         }
     }
@@ -175,6 +176,10 @@ impl<'self> Module<'self> {
                 module::LLVMSetModuleInlineAsm(self.r, s);
             }
         }
+    }
+
+    pub fn get_context(&self) -> &'self Context {
+        self.ctx
     }
 
     pub fn get_type(&self, name: &str) -> ty::Type {
@@ -246,6 +251,7 @@ impl<'self> Module<'self> {
 impl<'self> Drop for Module<'self> {
     fn finalize(&self) {
         unsafe {
+            debug!("Disposing Module");
             module::LLVMDisposeModule(self.r);
         }
     }

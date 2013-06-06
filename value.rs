@@ -17,6 +17,7 @@ pub trait ValImpl<T:ty::Ty> {
     pub fn dump(&self);
     pub fn is_constant(&self) -> bool;
     pub fn is_undef(&self) -> bool;
+    pub fn to_value(&self) -> Value<T>;
 }
 
 pub trait ConstImpl<T:ty::Ty> {
@@ -165,6 +166,12 @@ impl<T:ty::Ty,U:Val<T>> ValImpl<T> for U {
     pub fn is_undef(&self) -> bool {
         unsafe {
             value::LLVMIsUndef(self.to_ref()) == True
+        }
+    }
+
+    pub fn to_value(&self) -> Value<T> {
+        unsafe {
+            cast::transmute(self)
         }
     }
 }

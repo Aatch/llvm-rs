@@ -9,6 +9,10 @@ pub trait Ty : Wrapper<TypeRef> {
     pub fn is_sized(&self) -> bool;
 }
 
+pub trait ToType {
+    pub fn to_type(&self) -> Type;
+}
+
 macro_rules! type_wrap (
     ($t:ident) => (
         pub struct $t {
@@ -154,6 +158,15 @@ impl Type {
 
     pub fn cast<T:Ty>(&self) -> T {
         self.try_cast().unwrap()
+    }
+}
+
+impl<T:Ty> ToType for T {
+    pub fn to_type(&self) -> Type {
+        use std::cast;
+        unsafe {
+            cast::transmute(self)
+        }
     }
 }
 

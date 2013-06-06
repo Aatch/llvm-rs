@@ -324,7 +324,6 @@ pub mod module {
         pub fn LLVMGetTarget(M:ModuleRef) -> *c_char;
         #[fast_ffi]
         pub fn LLVMSetTarget(M:ModuleRef,Triple:*c_char);
-        #[fast_ffi]
         pub fn LLVMDumpModule(M:ModuleRef);
         #[fast_ffi]
         pub fn LLVMPrintModuleToFile(M:ModuleRef, Filename:*c_char, ErrMsg:*mut *c_char) -> Bool;
@@ -506,7 +505,6 @@ pub mod value {
         pub fn LLVMGetValueName(Val: ValueRef) -> *c_char;
         #[fast_ffi]
         pub fn LLVMSetValueName(Val: ValueRef, Name: *c_char);
-        #[fast_ffi]
         pub fn LLVMDumpValue(Val: ValueRef);
         #[fast_ffi]
         pub fn LLVMReplaceAllUsesWith(OldVal: ValueRef, NewVal: ValueRef);
