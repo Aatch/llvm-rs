@@ -6,21 +6,18 @@ use value::{BasicBlock,Val,Global,Param};
 
 use super::*;
 
-use std::str;
-use std::vec;
-
 pub struct IRBuilder {
     priv r: BuilderRef
 }
 
 impl Wrapper<BuilderRef> for IRBuilder {
-    pub fn from_ref(R: BuilderRef) -> IRBuilder {
+    fn from_ref(R: BuilderRef) -> IRBuilder {
         IRBuilder {
             r: R
         }
     }
 
-    pub fn to_ref(&self) -> BuilderRef {
+    fn to_ref(&self) -> BuilderRef {
         self.r
     }
 }
@@ -75,7 +72,7 @@ impl IRBuilder {
 
     pub fn insert_with_name<T:ty::Ty>(&mut self, instr: Instruction<T>, name: &str) {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 LLVMInsertIntoBuilderWithName(self.r, instr.to_ref(), s);
             }
         }
@@ -117,7 +114,7 @@ impl IRBuilder {
     pub fn aggregate_ret(&mut self, vals: &[value::Value<ty::Type>]) -> Instruction<ty::Void> {
         unsafe {
             let llvs = do vals.map |v| { v.to_ref() };
-            let r = do vec::as_imm_buf(llvs) |b, len| {
+            let r = do llvs.as_imm_buf |b, len| {
                 LLVMBuildAggregateRet(self.r, b, len as std::libc::c_uint)
             };
 
@@ -179,8 +176,8 @@ impl IRBuilder {
             let then = bb::LLVMValueAsBasicBlock(then.to_ref());
             let catch = bb::LLVMValueAsBasicBlock(catch.to_ref());
 
-            let r = do vec::as_imm_buf(llargs) |b,len| {
-                do str::as_c_str(name) |s| {
+            let r = do llargs.as_imm_buf |b,len| {
+                do name.with_c_str |s| {
                     LLVMBuildInvoke(self.r, fun.to_ref(), b, len as std::libc::c_uint,
                                     then, catch, s)
                 }
@@ -196,7 +193,7 @@ impl IRBuilder {
                                 num_clauses: uint,
                                 name: &str) -> LandingPad {
         unsafe {
-            let r = do str::as_c_str(name) |s| {
+            let r = do name.with_c_str |s| {
                 LLVMBuildLandingPad(self.r,
                                     ty.to_ref(),
                                     pers_fn.to_ref(),
@@ -224,7 +221,7 @@ impl IRBuilder {
     pub fn add<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildAdd(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -234,7 +231,7 @@ impl IRBuilder {
     pub fn nsw_add<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildNSWAdd(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -244,7 +241,7 @@ impl IRBuilder {
     pub fn nuw_add<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildNUWAdd(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -254,7 +251,7 @@ impl IRBuilder {
     pub fn fadd<V1:Val<ty::Real>,V2:Val<ty::Real>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<ty::Real> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildFAdd(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -264,7 +261,7 @@ impl IRBuilder {
     pub fn sub<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildSub(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -274,7 +271,7 @@ impl IRBuilder {
     pub fn nsw_sub<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildNSWSub(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -284,7 +281,7 @@ impl IRBuilder {
     pub fn nuw_sub<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildNUWSub(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -294,7 +291,7 @@ impl IRBuilder {
     pub fn fsub<V1:Val<ty::Real>,V2:Val<ty::Real>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<ty::Real> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildFSub(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -304,7 +301,7 @@ impl IRBuilder {
     pub fn mul<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildMul(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -314,7 +311,7 @@ impl IRBuilder {
     pub fn nsw_mul<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildNSWMul(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -324,7 +321,7 @@ impl IRBuilder {
     pub fn nuw_mul<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildNUWMul(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -334,7 +331,7 @@ impl IRBuilder {
     pub fn fmul<V1:Val<ty::Real>,V2:Val<ty::Real>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<ty::Real> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildFMul(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -344,7 +341,7 @@ impl IRBuilder {
     pub fn udiv<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildUDiv(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -354,7 +351,7 @@ impl IRBuilder {
     pub fn sdiv<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildSDiv(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -364,7 +361,7 @@ impl IRBuilder {
     pub fn sdiv_exact<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildExactSDiv(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -374,7 +371,7 @@ impl IRBuilder {
     pub fn fdiv<V1:Val<ty::Real>,V2:Val<ty::Real>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<ty::Real> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildFDiv(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -384,7 +381,7 @@ impl IRBuilder {
     pub fn urem<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildURem(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -394,7 +391,7 @@ impl IRBuilder {
     pub fn srem<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildURem(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -404,7 +401,7 @@ impl IRBuilder {
     pub fn frem<V1:Val<ty::Real>,V2:Val<ty::Real>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<ty::Real> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildFRem(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -414,7 +411,7 @@ impl IRBuilder {
     pub fn shl<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildShl(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -424,7 +421,7 @@ impl IRBuilder {
     pub fn lshr<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildLShr(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -434,7 +431,7 @@ impl IRBuilder {
     pub fn ashr<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildAShr(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -444,7 +441,7 @@ impl IRBuilder {
     pub fn or<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildOr(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -454,7 +451,7 @@ impl IRBuilder {
     pub fn xor<T:ty::Ty,V1:Val<T>,V2:Val<T>>(
         &self, lhs: V1, rhs: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildXor(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -463,7 +460,7 @@ impl IRBuilder {
 
     pub fn neg<T:ty::Ty,V:Val<T>>(&self, val: V, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildNeg(self.r, val.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -472,7 +469,7 @@ impl IRBuilder {
 
     pub fn nsw_neg<T:ty::Ty,V:Val<T>>(&self, val: V, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildNSWNeg(self.r, val.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -481,7 +478,7 @@ impl IRBuilder {
 
     pub fn nuw_neg<T:ty::Ty,V:Val<T>>(&self, val: V, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildNUWNeg(self.r, val.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -490,7 +487,7 @@ impl IRBuilder {
 
     pub fn fneg<V:Val<ty::Real>>(&self, val: V, name: &str) -> Instruction<ty::Real> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildFNeg(self.r, val.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -499,7 +496,7 @@ impl IRBuilder {
 
     pub fn not<T:ty::Ty,V:Val<T>>(&self, val: V, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildNot(self.r, val.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -508,7 +505,7 @@ impl IRBuilder {
 
     pub fn malloc<T:ty::Ty>(&self, ty: T, name: &str) -> Instruction<ty::Pointer<T>> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildMalloc(self.r, ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -518,7 +515,7 @@ impl IRBuilder {
     pub fn array_malloc<T:ty::Ty,I:Val<ty::Integer>>(
         self, ty: T, size: I, name: &str) -> Instruction<ty::Pointer<T>> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildArrayMalloc(self.r, ty.to_ref(), size.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -527,7 +524,7 @@ impl IRBuilder {
 
     pub fn alloca<T:ty::Ty>(&self, ty: T, name: &str) -> Instruction<ty::Pointer<T>> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildAlloca(self.r, ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -537,7 +534,7 @@ impl IRBuilder {
     pub fn array_alloca<T:ty::Ty,I:Val<ty::Integer>>(
         &self, ty: T, size: I, name: &str) -> Instruction<ty::Pointer<T>> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildArrayAlloca(self.r, ty.to_ref(), size.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -553,7 +550,7 @@ impl IRBuilder {
 
     pub fn load<T:ty::Ty,V:Val<ty::Pointer<T>>>(&self, v: V, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildLoad(self.r, v.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -572,8 +569,8 @@ impl IRBuilder {
         &self, ptr: VP, idxs: &[VI], name: &str) -> Instruction<ty::Pointer<ty::Type>> {
         unsafe {
             let llis = do idxs.map |i| { i.to_ref() };
-            do str::as_c_str(name) |s| {
-                do vec::as_imm_buf(llis) |b, len| {
+            do name.with_c_str |s| {
+                do llis.as_imm_buf |b, len| {
                     let r = LLVMBuildGEP(self.r, ptr.to_ref(),
                                          b, len as std::libc::c_uint, s);
                     Wrapper::from_ref(r)
@@ -586,8 +583,8 @@ impl IRBuilder {
         &self, ptr: VP, idxs: &[VI], name: &str) -> Instruction<ty::Pointer<ty::Type>> {
         unsafe {
             let llis = do idxs.map |i| { i.to_ref() };
-            do str::as_c_str(name) |s| {
-                do vec::as_imm_buf(llis) |b, len| {
+            do name.with_c_str |s| {
+                do llis.as_imm_buf |b, len| {
                     let r = LLVMBuildInBoundsGEP(self.r, ptr.to_ref(),
                                          b, len as std::libc::c_uint, s);
                     Wrapper::from_ref(r)
@@ -599,7 +596,7 @@ impl IRBuilder {
     pub fn struct_gep<VP:Val<ty::Struct>>(&self, ptr: VP, idx: uint, name: &str)
                     -> Instruction<ty::Type> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildStructGEP(self.r, ptr.to_ref(), idx as std::libc::c_uint, s);
                 Wrapper::from_ref(r)
             }
@@ -608,8 +605,8 @@ impl IRBuilder {
 
     pub fn global_string(&self, string: &str, name: &str) -> Global<ty::Integer> {
         unsafe {
-            do str::as_c_str(string) |d| {
-                do str::as_c_str(name) |n| {
+            do string.with_c_str |d| {
+                do name.with_c_str |n| {
                     let r = LLVMBuildGlobalString(self.r, d, n);
                     Wrapper::from_ref(r)
                 }
@@ -617,10 +614,10 @@ impl IRBuilder {
         }
     }
 
-    pub fn global_string(&self, string: &str, name: &str) -> Instruction<ty::Pointer<ty::Integer>> {
+    pub fn global_string_ptr(&self, string: &str, name: &str) -> Instruction<ty::Pointer<ty::Integer>> {
         unsafe {
-            do str::as_c_str(string) |d| {
-                do str::as_c_str(name) |n| {
+            do string.with_c_str |d| {
+                do name.with_c_str |n| {
                     let r = LLVMBuildGlobalStringPtr(self.r, d, n);
                     Wrapper::from_ref(r)
                 }
@@ -631,7 +628,7 @@ impl IRBuilder {
     pub fn trunc<T1:ty::Ty,T2:ty::Ty,V:Val<T1>>(
         &self, val: V, ty: T2, name: &str) -> Instruction<T2> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildTrunc(self.r, val.to_ref(), ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -641,7 +638,7 @@ impl IRBuilder {
     pub fn zext<T1:ty::Ty,T2:ty::Ty,V:Val<T1>>(
         &self, val: V, ty: T2, name: &str) -> Instruction<T2> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildZExt(self.r, val.to_ref(), ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -651,7 +648,7 @@ impl IRBuilder {
     pub fn sext<T1:ty::Ty,T2:ty::Ty,V:Val<T1>>(
         &self, val: V, ty: T2, name: &str) -> Instruction<T2> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildSExt(self.r, val.to_ref(), ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -661,7 +658,7 @@ impl IRBuilder {
     pub fn fp_to_ui<V:Val<ty::Real>>(
         &self, val: V, ty: ty::Integer, name: &str) -> Instruction<ty::Integer> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildFPToUI(self.r, val.to_ref(), ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -671,7 +668,7 @@ impl IRBuilder {
     pub fn fp_to_si<V:Val<ty::Real>>(
         &self, val: V, ty: ty::Integer, name: &str) -> Instruction<ty::Integer> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildFPToSI(self.r, val.to_ref(), ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -681,7 +678,7 @@ impl IRBuilder {
     pub fn ui_to_fp<V:Val<ty::Integer>>(
         &self, val: V, ty: ty::Real, name: &str) -> Instruction<ty::Real> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildUIToFP(self.r, val.to_ref(), ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -691,7 +688,7 @@ impl IRBuilder {
     pub fn si_to_fp<V:Val<ty::Integer>>(
         &self, val: V, ty: ty::Real, name: &str) -> Instruction<ty::Real> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildSIToFP(self.r, val.to_ref(), ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -701,7 +698,7 @@ impl IRBuilder {
     pub fn fptrunc<V:Val<ty::Real>>(
         &self, val:V, ty: ty::Real, name: &str) -> Instruction<ty::Real> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildFPTrunc(self.r, val.to_ref(), ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -711,7 +708,7 @@ impl IRBuilder {
     pub fn fpext<V:Val<ty::Real>>(
         &self, val:V, ty: ty::Real, name: &str) -> Instruction<ty::Real> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildFPExt(self.r, val.to_ref(), ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -721,7 +718,7 @@ impl IRBuilder {
     pub fn ptr_to_int<T:ty::Ty,VP:Val<ty::Pointer<T>>>(
         &self, val: VP, ty: ty::Integer, name: &str) -> Instruction<ty::Integer> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildPtrToInt(self.r, val.to_ref(), ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -731,7 +728,7 @@ impl IRBuilder {
     pub fn int_to_ptr<T:ty::Ty,V:Val<ty::Integer>>(
         &self, val: V, ty: ty::Pointer<T>, name: &str) -> Instruction<ty::Pointer<T>> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildIntToPtr(self.r, val.to_ref(), ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -741,7 +738,7 @@ impl IRBuilder {
     pub fn bitcast<T1:ty::Ty,T2:ty::Ty,V:Val<T1>>(
         &self, val: V, ty: T2, name: &str) -> Instruction<T2> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildBitCast(self.r, val.to_ref(), ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -751,7 +748,7 @@ impl IRBuilder {
     pub fn zext_or_bitcast<T1:ty::Ty,T2:ty::Ty,V:Val<T1>>(
         &self, val: V, ty: T2, name: &str) -> Instruction<T2> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildZExtOrBitCast(self.r, val.to_ref(), ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -761,7 +758,7 @@ impl IRBuilder {
     pub fn sext_or_bitcast<T1:ty::Ty,T2:ty::Ty,V:Val<T1>>(
         &self, val: V, ty: T2, name: &str) -> Instruction<T2> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildSExtOrBitCast(self.r, val.to_ref(), ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -771,7 +768,7 @@ impl IRBuilder {
     pub fn trunc_or_bitcast<T1:ty::Ty,T2:ty::Ty,V:Val<T1>>(
         &self, val: V, ty: T2, name: &str) -> Instruction<T2> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildTruncOrBitCast(self.r, val.to_ref(), ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -781,7 +778,7 @@ impl IRBuilder {
     pub fn pointer_cast<T1:ty::Ty,T2:ty::Ty,V:Val<ty::Pointer<T1>>>(
         &self, val: V, ty: ty::Pointer<T2>, name: &str) -> Instruction<T2> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildPointerCast(self.r, val.to_ref(), ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -792,7 +789,7 @@ impl IRBuilder {
         -> Instruction<ty::Integer> {
 
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildIntCast(self.r, val.to_ref(), ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -803,7 +800,7 @@ impl IRBuilder {
         -> Instruction<ty::Real> {
 
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildFPCast(self.r, val.to_ref(), ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -813,7 +810,7 @@ impl IRBuilder {
     pub fn icmp<V1:Val<ty::Integer>,V2:Val<ty::Integer>>(
         &self, op: IntPredicate, lhs: V1, rhs: V2, name: &str) -> Instruction<ty::Integer> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildICmp(self.r, op as std::libc::c_uint,
                                       lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
@@ -824,7 +821,7 @@ impl IRBuilder {
     pub fn fcmp<V1:Val<ty::Real>,V2:Val<ty::Real>>(
         &self, op: RealPredicate, lhs: V1, rhs: V2, name: &str) -> Instruction<ty::Real> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildFCmp(self.r, op as std::libc::c_uint,
                                       lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
@@ -834,7 +831,7 @@ impl IRBuilder {
 
     pub fn phi<T:ty::Ty>(&self, ty: T, name: &str) -> PhiNode<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildPhi(self.r, ty.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -845,8 +842,8 @@ impl IRBuilder {
                 name: &str) -> CallInst<ty::Type> {
         unsafe {
             let llargs = do args.map |a| { a.to_ref() };
-            do str::as_c_str(name) |s| {
-                do vec::as_imm_buf(llargs) |buf, len| {
+            do name.with_c_str |s| {
+                do llargs.as_imm_buf |buf, len| {
                     let r = LLVMBuildCall(self.r, fun.to_ref(),
                                           buf, len as std::libc::c_uint, s);
                     Wrapper::from_ref(r)
@@ -858,7 +855,7 @@ impl IRBuilder {
     pub fn select<T:ty::Ty,VC:Val<ty::Integer>,VT:Val<T>,VE:Val<T>>(
         self, cond: VC, then: VT, els: VE, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildSelect(self.r, cond.to_ref(), then.to_ref(), els.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -868,7 +865,7 @@ impl IRBuilder {
     pub fn extract_element<T:ty::Ty,V1:Val<ty::Vector<T>>,V2:Val<ty::Integer>>(
         &self, vec: V1, idx: V2, name: &str) -> Instruction<T> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildExtractElement(self.r, vec.to_ref(), idx.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -878,7 +875,7 @@ impl IRBuilder {
     pub fn ptr_diff<T:ty::Ty,V1:Val<ty::Pointer<T>>,V2:Val<ty::Pointer<T>>>(
         &self, lhs: V1, rhs:V2, name: &str) -> Instruction<ty::Integer> {
         unsafe {
-            do str::as_c_str(name) |s| {
+            do name.with_c_str |s| {
                 let r = LLVMBuildPtrDiff(self.r, lhs.to_ref(), rhs.to_ref(), s);
                 Wrapper::from_ref(r)
             }
@@ -887,7 +884,7 @@ impl IRBuilder {
 }
 
 impl Drop for IRBuilder {
-    pub fn finalize(&self) {
+    fn drop(&self) {
         unsafe {
             LLVMDisposeBuilder(self.r);
         }

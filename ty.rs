@@ -5,12 +5,12 @@ use std::vec;
 use std::str;
 
 pub trait Ty : Wrapper<TypeRef> {
-    pub fn kind() -> Kind;
-    pub fn is_sized(&self) -> bool;
+    fn kind() -> Kind;
+    fn is_sized(&self) -> bool;
 }
 
 pub trait ToType {
-    pub fn to_type(&self) -> Type;
+    fn to_type(&self) -> Type;
 }
 
 macro_rules! type_wrap (
@@ -24,13 +24,13 @@ macro_rules! type_wrap (
 macro_rules! impl_wrapper (
     ($t:ident) => (
         impl Wrapper<core::TypeRef> for $t {
-            pub fn from_ref(R: core::TypeRef) -> $t {
+            fn from_ref(R: core::TypeRef) -> $t {
                 $t {
                     r: R
                 }
             }
 
-            pub fn to_ref(&self) -> core::TypeRef {
+            fn to_ref(&self) -> core::TypeRef {
                 self.r
             }
         }
@@ -79,47 +79,47 @@ pub struct Pointer<T> {
 }
 
 impl<T> Wrapper<TypeRef> for Array<T> {
-    pub fn from_ref(R: TypeRef) -> Array<T> {
+    fn from_ref(R: TypeRef) -> Array<T> {
         Array {
             r: R
         }
     }
 
-    pub fn to_ref(&self) -> TypeRef {
+    fn to_ref(&self) -> TypeRef {
         self.r
     }
 }
 
 impl<T> Wrapper<TypeRef> for Vector<T> {
-    pub fn from_ref(R: TypeRef) -> Vector<T> {
+    fn from_ref(R: TypeRef) -> Vector<T> {
         Vector {
             r: R
         }
     }
 
-    pub fn to_ref(&self) -> TypeRef {
+    fn to_ref(&self) -> TypeRef {
         self.r
     }
 }
 
 impl<T> Wrapper<TypeRef> for Pointer<T> {
-    pub fn from_ref(R: TypeRef) -> Pointer<T> {
+    fn from_ref(R: TypeRef) -> Pointer<T> {
         Pointer {
             r: R
         }
     }
 
-    pub fn to_ref(&self) -> TypeRef {
+    fn to_ref(&self) -> TypeRef {
         self.r
     }
 }
 
 impl Ty for Type {
-    pub fn kind() -> Kind {
+    fn kind() -> Kind {
         fail!("Cannot get the kind of an unknown type")
     }
 
-    pub fn is_sized(&self) -> bool {
+    fn is_sized(&self) -> bool {
         unsafe {
             core::types::LLVMTypeIsSized(self.r) == core::True
         }
@@ -127,7 +127,7 @@ impl Ty for Type {
 }
 
 impl Type {
-    pub fn try_cast<T:Ty>(&self) -> Option<T> {
+    fn try_cast<T:Ty>(&self) -> Option<T> {
         use std::cast;
 
         let llkind = unsafe { core::types::LLVMGetTypeKind(self.r) };
@@ -156,13 +156,13 @@ impl Type {
         }
     }
 
-    pub fn cast<T:Ty>(&self) -> T {
+    fn cast<T:Ty>(&self) -> T {
         self.try_cast().unwrap()
     }
 }
 
 impl<T:Ty> ToType for T {
-    pub fn to_type(&self) -> Type {
+    fn to_type(&self) -> Type {
         use std::cast;
         unsafe {
             cast::transmute(self)
@@ -171,8 +171,8 @@ impl<T:Ty> ToType for T {
 }
 
 impl Ty for Void {
-    pub fn kind() -> Kind { Void }
-    pub fn is_sized(&self) -> bool {
+    fn kind() -> Kind { Void }
+    fn is_sized(&self) -> bool {
         unsafe {
             core::types::LLVMTypeIsSized(self.r) == core::True
         }
@@ -180,7 +180,7 @@ impl Ty for Void {
 }
 
 impl Void {
-    pub fn new(c: &Context) -> Void {
+    fn new(c: &Context) -> Void {
         unsafe {
             let r = core::types::LLVMVoidTypeInContext(c.to_ref());
             Wrapper::from_ref(r)
@@ -189,8 +189,8 @@ impl Void {
 }
 
 impl Ty for Label {
-    pub fn kind() -> Kind { Label }
-    pub fn is_sized(&self) -> bool {
+    fn kind() -> Kind { Label }
+    fn is_sized(&self) -> bool {
         unsafe {
             core::types::LLVMTypeIsSized(self.r) == core::True
         }
@@ -198,7 +198,7 @@ impl Ty for Label {
 }
 
 impl Label {
-    pub fn new(c: &Context) -> Label {
+    fn new(c: &Context) -> Label {
         unsafe {
             let r = core::types::LLVMLabelTypeInContext(c.to_ref());
             Wrapper::from_ref(r)
@@ -207,8 +207,8 @@ impl Label {
 }
 
 impl Ty for Real {
-    pub fn kind() -> Kind { Real }
-    pub fn is_sized(&self) -> bool {
+    fn kind() -> Kind { Real }
+    fn is_sized(&self) -> bool {
         unsafe {
             core::types::LLVMTypeIsSized(self.r) == core::True
         }
@@ -216,37 +216,37 @@ impl Ty for Real {
 }
 
 impl Real {
-    pub fn new_half(c: &Context) -> Real {
+    fn new_half(c: &Context) -> Real {
         unsafe {
             let r = core::types::LLVMHalfTypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_float(c: &Context) -> Real {
+    fn new_float(c: &Context) -> Real {
         unsafe {
             let r = core::types::LLVMFloatTypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_double(c: &Context) -> Real {
+    fn new_double(c: &Context) -> Real {
         unsafe {
             let r = core::types::LLVMDoubleTypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_x86fp80(c: &Context) -> Real {
+    fn new_x86fp80(c: &Context) -> Real {
         unsafe {
             let r = core::types::LLVMX86FP80TypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_fp128(c: &Context) -> Real {
+    fn new_fp128(c: &Context) -> Real {
         unsafe {
             let r = core::types::LLVMFP128TypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_ppcfp128(c: &Context) -> Real {
+    fn new_ppcfp128(c: &Context) -> Real {
         unsafe {
             let r = core::types::LLVMPPCFP128TypeInContext(c.to_ref());
             Wrapper::from_ref(r)
@@ -255,8 +255,8 @@ impl Real {
 }
 
 impl Ty for Integer {
-    pub fn kind() -> Kind { Integer }
-    pub fn is_sized(&self) -> bool {
+    fn kind() -> Kind { Integer }
+    fn is_sized(&self) -> bool {
         unsafe {
             core::types::LLVMTypeIsSized(self.r) == core::True
         }
@@ -264,43 +264,43 @@ impl Ty for Integer {
 }
 
 impl Integer {
-    pub fn new_i1(c:&Context) -> Integer {
+    fn new_i1(c:&Context) -> Integer {
         unsafe {
             let r = core::types::LLVMInt1TypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_i8(c:&Context) -> Integer {
+    fn new_i8(c:&Context) -> Integer {
         unsafe {
             let r = core::types::LLVMInt8TypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_i16(c:&Context) -> Integer {
+    fn new_i16(c:&Context) -> Integer {
         unsafe {
             let r = core::types::LLVMInt16TypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_i32(c:&Context) -> Integer {
+    fn new_i32(c:&Context) -> Integer {
         unsafe {
             let r = core::types::LLVMInt32TypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_i64(c:&Context) -> Integer {
+    fn new_i64(c:&Context) -> Integer {
         unsafe {
             let r = core::types::LLVMInt64TypeInContext(c.to_ref());
             Wrapper::from_ref(r)
         }
     }
-    pub fn new_from_width(c:&Context, bits: uint) -> Integer {
+    fn new_from_width(c:&Context, bits: uint) -> Integer {
         unsafe {
             let r = core::types::LLVMIntTypeInContext(c.to_ref(), bits as std::libc::c_uint);
             Wrapper::from_ref(r)
         }
     }
-    pub fn width(&self) -> uint {
+    fn width(&self) -> uint {
         unsafe {
             core::types::LLVMGetIntTypeWidth(self.r) as uint
         }
@@ -308,8 +308,8 @@ impl Integer {
 }
 
 impl Ty for Function {
-    pub fn kind() -> Kind { Function }
-    pub fn is_sized(&self) -> bool {
+    fn kind() -> Kind { Function }
+    fn is_sized(&self) -> bool {
         unsafe {
             core::types::LLVMTypeIsSized(self.r) == core::True
         }
@@ -317,34 +317,34 @@ impl Ty for Function {
 }
 
 impl Function {
-    pub fn new<T:ty::Ty>(ret: T, params: &[Type], is_var_arg: bool) -> Function {
+    fn new<T:ty::Ty>(ret: T, params: &[Type], is_var_arg: bool) -> Function {
         let llret = ret.to_ref();
         let llparams = do params.map |t| {
             t.to_ref()
         };
         let is_var_arg = if is_var_arg { core::True } else { core::False };
         let r = unsafe {
-            do vec::as_imm_buf(llparams) |b, len| {
+            do llparams.as_imm_buf |b, len| {
                 core::types::LLVMFunctionType(llret, b, len as std::libc::c_uint, is_var_arg)
             }
         };
         Wrapper::from_ref(r)
     }
 
-    pub fn is_var_arg(&self) -> bool {
+    fn is_var_arg(&self) -> bool {
         unsafe {
             core::types::LLVMIsFunctionVarArg(self.r) == core::True
         }
     }
 
-    pub fn return_type(&self) -> Type {
+    fn return_type(&self) -> Type {
         unsafe {
             let r = core::types::LLVMGetReturnType(self.r);
             Wrapper::from_ref(r)
         }
     }
 
-    pub fn params(&self) -> ~[Type] {
+    fn params(&self) -> ~[Type] {
         unsafe {
             let num_params = core::types::LLVMCountParamTypes(self.r) as uint;
             let mut buf : ~[core::TypeRef] = vec::with_capacity(num_params);
@@ -358,8 +358,8 @@ impl Function {
 }
 
 impl Ty for Struct {
-    pub fn kind() -> Kind { Struct }
-    pub fn is_sized(&self) -> bool {
+    fn kind() -> Kind { Struct }
+    fn is_sized(&self) -> bool {
         unsafe {
             core::types::LLVMTypeIsSized(self.r) == core::True
         }
@@ -367,24 +367,24 @@ impl Ty for Struct {
 }
 
 impl Struct {
-    pub fn new(c: &Context, elements: &[Type], packed: bool) -> Struct {
+    fn new(c: &Context, elements: &[Type], packed: bool) -> Struct {
         let cr = c.to_ref();
         let llelems = do elements.map |t| {
             t.to_ref()
         };
         let packed = if packed { core::True } else { core::False };
         let r = unsafe {
-            do vec::as_imm_buf(llelems) |b, len| {
+            do llelems.as_imm_buf |b, len| {
                 core::types::LLVMStructTypeInContext(cr, b, len as std::libc::c_uint, packed)
             }
         };
         Wrapper::from_ref(r)
     }
 
-    pub fn new_named(c: &Context, name: &str, elements: &[Type], packed: bool) -> Struct {
+    fn new_named(c: &Context, name: &str, elements: &[Type], packed: bool) -> Struct {
         unsafe {
             let cr = c.to_ref();
-            let r = do str::as_c_str(name) |s| {
+            let r = do name.with_c_str |s| {
                 core::types::LLVMStructCreateNamed(cr, s)
             };
 
@@ -394,7 +394,7 @@ impl Struct {
             };
 
             let packed = if packed { core::True } else { core::False };
-            do vec::as_imm_buf(llelems) |b, len| {
+            do llelems.as_imm_buf |b, len| {
                 core::types::LLVMStructSetBody(r, b, len as std::libc::c_uint, packed);
             }
 
@@ -402,14 +402,14 @@ impl Struct {
         }
     }
 
-    pub fn get_name(&self) -> ~str {
+    fn get_name(&self) -> ~str {
         unsafe {
             let buf = core::types::LLVMGetStructName(self.r);
             str::raw::from_c_str(buf)
         }
     }
 
-    pub fn elements(&self) -> ~[Type] {
+    fn elements(&self) -> ~[Type] {
         unsafe {
             let num_elems = core::types::LLVMCountStructElementTypes(self.r) as uint;
             let mut buf : ~[core::TypeRef] = vec::with_capacity(num_elems);
@@ -421,13 +421,13 @@ impl Struct {
         }
     }
 
-    pub fn is_packed(&self) -> bool {
+    fn is_packed(&self) -> bool {
         unsafe {
             core::types::LLVMIsPackedStruct(self.r) == core::True
         }
     }
 
-    pub fn is_opaque(&self) -> bool {
+    fn is_opaque(&self) -> bool {
         unsafe {
             core::types::LLVMIsOpaqueStruct(self.r) == core::True
         }
@@ -435,8 +435,8 @@ impl Struct {
 }
 
 impl<T> Ty for Array<T> {
-    pub fn kind() -> Kind { Array }
-    pub fn is_sized(&self) -> bool {
+    fn kind() -> Kind { Array }
+    fn is_sized(&self) -> bool {
         unsafe {
             core::types::LLVMTypeIsSized(self.r) == core::True
         }
@@ -444,21 +444,21 @@ impl<T> Ty for Array<T> {
 }
 
 impl<T:Ty> Array<T> {
-    pub fn new(ty: T, size: uint) -> Vector<T> {
+    fn new(ty: T, size: uint) -> Vector<T> {
         unsafe {
             let r = core::types::LLVMArrayType(ty.to_ref(), size as std::libc::c_uint);
             Wrapper::from_ref(r)
         }
     }
 
-    pub fn element_type(&self) -> T {
+    fn element_type(&self) -> T {
         unsafe {
             let r = core::types::LLVMGetElementType(self.r);
             Wrapper::from_ref(r)
         }
     }
 
-    pub fn size(&self) -> uint {
+    fn size(&self) -> uint {
         unsafe {
             core::types::LLVMGetArrayLength(self.r) as uint
         }
@@ -466,8 +466,8 @@ impl<T:Ty> Array<T> {
 }
 
 impl<T> Ty for Vector<T> {
-    pub fn kind() -> Kind { Vector }
-    pub fn is_sized(&self) -> bool {
+    fn kind() -> Kind { Vector }
+    fn is_sized(&self) -> bool {
         unsafe {
             core::types::LLVMTypeIsSized(self.r) == core::True
         }
@@ -475,21 +475,21 @@ impl<T> Ty for Vector<T> {
 }
 
 impl<T:Ty> Vector<T> {
-    pub fn new(ty: T, size: uint) -> Vector<T> {
+    fn new(ty: T, size: uint) -> Vector<T> {
         unsafe {
             let r = core::types::LLVMVectorType(ty.to_ref(), size as std::libc::c_uint);
             Wrapper::from_ref(r)
         }
     }
 
-    pub fn element_type(&self) -> T {
+    fn element_type(&self) -> T {
         unsafe {
             let r = core::types::LLVMGetElementType(self.r);
             Wrapper::from_ref(r)
         }
     }
 
-    pub fn size(&self) -> uint {
+    fn size(&self) -> uint {
         unsafe {
             core::types::LLVMGetVectorSize(self.r) as uint
         }
@@ -498,8 +498,8 @@ impl<T:Ty> Vector<T> {
 
 
 impl<T> Ty for Pointer<T> {
-    pub fn kind() -> Kind { Pointer }
-    pub fn is_sized(&self) -> bool {
+    fn kind() -> Kind { Pointer }
+    fn is_sized(&self) -> bool {
         unsafe {
             core::types::LLVMTypeIsSized(self.r) == core::True
         }
@@ -507,21 +507,21 @@ impl<T> Ty for Pointer<T> {
 }
 
 impl<T:Ty> Pointer<T> {
-    pub fn new(ty: T, address_space: uint) -> Pointer<T> {
+    fn new(ty: T, address_space: uint) -> Pointer<T> {
         unsafe {
             let r = core::types::LLVMPointerType(ty.to_ref(), address_space as std::libc::c_uint);
             Wrapper::from_ref(r)
         }
     }
 
-    pub fn pointee_type(&self) -> T {
+    fn pointee_type(&self) -> T {
         unsafe {
             let r = core::types::LLVMGetElementType(self.r);
             Wrapper::from_ref(r)
         }
     }
 
-    pub fn address_space(&self) -> uint {
+    fn address_space(&self) -> uint {
         unsafe {
             core::types::LLVMGetPointerAddressSpace(self.r) as uint
         }
@@ -529,8 +529,8 @@ impl<T:Ty> Pointer<T> {
 }
 
 impl Ty for Metadata {
-    pub fn kind() -> Kind { Metadata }
-    pub fn is_sized(&self) -> bool {
+    fn kind() -> Kind { Metadata }
+    fn is_sized(&self) -> bool {
         unsafe {
             core::types::LLVMTypeIsSized(self.r) == core::True
         }
